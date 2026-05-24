@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-gear me-2"></i>Settings
+        </h1>
+    </div>
+
+    <form
+        hx-post="/settings/save"
+        hx-swap="none"
+        hx-trigger="submit"
+        class="settings-form"
+    >
+        <div class="row g-4">
+            <!-- OpenAI -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-robot me-2"></i>OpenAI
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            <label for="openai_api_key" class="form-label d-flex align-items-center justify-content-between">
+                                <span>API Key</span>
+                                {% if settings.get('openai_api_key', '') %}
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Saved
+                                </span>
+                                {% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="openai_api_key"
+                                    name="openai_api_key"
+                                    placeholder="{% if settings.get('openai_api_key', '') %}••••••{% else %}Enter your OpenAI API key{% endif %}"
+                                    value=""
+                                    autocomplete="off"
+                                >
+                                <button
+                                    class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePasswordVisibility('openai_api_key', this)"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            {% if settings.get('openai_api_key', '') %}
+                            <input type="hidden" name="openai_api_key_unchanged" value="1">
+                            {% endif %}
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between align-items-center gap-2">
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                hx-post="/settings/test-provider"
+                                hx-vals='{"provider": "openai"}'
+                                hx-include="[name='openai_api_key']"
+                                hx-swap="none"
+                            >
+                                <i class="bi bi-plug me-1"></i>Test Connection
+                            </button>
+                            <div class="d-flex gap-2">
+                                {% if settings.get('openai_api_key', '') %}
+                                <button
+                                    type="submit"
+                                    name="clear_key"
+                                    value="openai"
+                                    class="btn btn-outline-danger btn-sm"
+                                >
+                                    <i class="bi bi-x-lg me-1"></i>Clear
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-check-lg me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anthropic -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header text-white" style="background-color: #cc785c;">
+                        <i class="bi bi-stars me-2"></i>Anthropic
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            <label for="anthropic_api_key" class="form-label d-flex align-items-center justify-content-between">
+                                <span>API Key</span>
+                                {% if settings.get('anthropic_api_key', '') %}
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Saved
+                                </span>
+                                {% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="anthropic_api_key"
+                                    name="anthropic_api_key"
+                                    placeholder="{% if settings.get('anthropic_api_key', '') %}••••••{% else %}Enter your Anthropic API key{% endif %}"
+                                    value=""
+                                    autocomplete="off"
+                                >
+                                <button
+                                    class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePasswordVisibility('anthropic_api_key', this)"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            {% if settings.get('anthropic_api_key', '') %}
+                            <input type="hidden" name="anthropic_api_key_unchanged" value="1">
+                            {% endif %}
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between align-items-center gap-2">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                hx-post="/settings/test-provider"
+                                hx-vals='{"provider": "anthropic"}'
+                                hx-include="[name='anthropic_api_key']"
+                                hx-swap="none"
+                            >
+                                <i class="bi bi-plug me-1"></i>Test Connection
+                            </button>
+                            <div class="d-flex gap-2">
+                                {% if settings.get('anthropic_api_key', '') %}
+                                <button
+                                    type="submit"
+                                    name="clear_key"
+                                    value="anthropic"
+                                    class="btn btn-outline-danger btn-sm"
+                                >
+                                    <i class="bi bi-x-lg me-1"></i>Clear
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-check-lg me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Gemini -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header text-white" style="background-color: #4285f4;">
+                        <i class="bi bi-google me-2"></i>Google Gemini
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            <label for="google_api_key" class="form-label d-flex align-items-center justify-content-between">
+                                <span>API Key</span>
+                                {% if settings.get('google_api_key', '') %}
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Saved
+                                </span>
+                                {% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="google_api_key"
+                                    name="google_api_key"
+                                    placeholder="{% if settings.get('google_api_key', '') %}••••••{% else %}Enter your Google API key{% endif %}"
+                                    value=""
+                                    autocomplete="off"
+                                >
+                                <button
+                                    class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePasswordVisibility('google_api_key', this)"
+                                    aria-label="Toggle password visibility"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            {% if settings.get('google_api_key', '') %}
+                            <input type="hidden" name="google_api_key_unchanged" value="1">
+                            {% endif %}
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between align-items-center gap-2">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                hx-post="/settings/test-provider"
+                                hx-vals='{"provider": "google"}'
+                                hx-include="[name='google_api_key']"
+                                hx-swap="none"
+                            >
+                                <i class="bi bi-plug me-1"></i>Test Connection
+                            </button>
+                            <div class="d-flex gap-2">
+                                {% if settings.get('google_api_key', '') %}
+                                <button
+                                    type="submit"
+                                    name="clear_key"
+                                    value="google"
+                                    class="btn btn-outline-danger btn-sm"
+                                >
+                                    <i class="bi bi-x-lg me-1"></i>Clear
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-check-lg me-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AWS Bedrock -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header text-white" style="background-color: #ff9900;">
+                        <i class="bi bi-cloud me-2"></i>AWS Bedrock
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="aws_profile" class="form-label">AWS Profile</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="aws_profile"
+                                name="aws_profile"
+                                value="{{ settings.get('aws_profile', '') }}"
+                                placeholder="e.g. default, my-bedrock-profile"
+                            >
+                            <div class="form-text">
+                                Profile name from <code>~/.aws/credentials</code>. Configure with <code>aws configure --profile &lt;name&gt;</code>.
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="aws_region" class="form-label">Region</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="aws_region"
+                                name="aws_region"
+                                value="{{ settings.get('aws_region', 'us-east-1') }}"
+                                placeholder="us-east-1"
+                            >
+                        </div>
+                        <div class="mt-3 d-flex justify-content-between align-items-center gap-2">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                hx-post="/settings/test-provider"
+                                hx-vals='{"provider": "bedrock"}'
+                                hx-include="[name='aws_profile'],[name='aws_region']"
+                                hx-swap="none"
+                            >
+                                <i class="bi bi-plug me-1"></i>Test Connection
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-check-lg me-1"></i>Save
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defaults -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <i class="bi bi-sliders me-2"></i>Defaults
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label for="default_provider" class="form-label">Default AI Provider</label>
+                                <select
+                                    class="form-select"
+                                    id="default_provider"
+                                    name="default_provider"
+                                >
+                                    <option value="openai" {% if settings.get('default_provider', 'openai') == 'openai' %}selected{% endif %}>OpenAI</option>
+                                    <option value="anthropic" {% if settings.get('default_provider', 'openai') == 'anthropic' %}selected{% endif %}>Anthropic</option>
+                                    <option value="google" {% if settings.get('default_provider', 'openai') == 'google' %}selected{% endif %}>Google Gemini</option>
+                                    <option value="bedrock" {% if settings.get('default_provider', 'openai') == 'bedrock' %}selected{% endif %}>AWS Bedrock</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="default_model" class="form-label">Default Model</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="default_model"
+                                    name="default_model"
+                                    value="{{ settings.get('default_model', '') }}"
+                                    placeholder="e.g. gpt-4o, claude-3-opus, gemini-1.5-pro"
+                                >
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="default_concurrency" class="form-label">Default Parallel Agents</label>
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="default_concurrency"
+                                    name="default_concurrency"
+                                    value="{{ settings.get('default_concurrency', '5') }}"
+                                    min="1"
+                                    max="20"
+                                >
+                            </div>
+                        </div>
+                        <div class="mt-3 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-check-lg me-1"></i>Save
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Browser / Web Browsing -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header text-white" style="background-color: #198754;">
+                        <i class="bi bi-globe2 me-2"></i>Web Browsing (Chrome Profile)
+                    </div>
+                    <div class="card-body">
+                        <div class="form-text mb-3">
+                            To let AI agents browse authenticated or JavaScript-heavy sites
+                            (LinkedIn, SmartRecruiters, Google Scholar), connect Playwright to
+                            your real Chrome session (recommended on macOS) or point to your
+                            user data directory.
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label for="chrome_cdp_url" class="form-label">
+                                    Chrome remote debugging URL (recommended)
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="chrome_cdp_url"
+                                    name="chrome_cdp_url"
+                                    value="{{ settings.get('chrome_cdp_url', '') }}"
+                                    placeholder="http://127.0.0.1:9222"
+                                    autocomplete="off"
+                                >
+                                <div class="form-text">
+                                    Launch agent Chrome with <code>make chrome-debug</code> (uses
+                                    <code>./data/chrome-debug</code>). Your everyday Chrome can stay open —
+                                    the two use separate profiles. Paste <code>http://127.0.0.1:9222</code> here.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-8">
+                                <label for="chrome_profile_path" class="form-label">Chrome User Data Directory</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="chrome_profile_path"
+                                    name="chrome_profile_path"
+                                    value="{{ settings.get('chrome_profile_path', '') }}"
+                                    placeholder="e.g. /Users/you/Library/Application Support/Google/Chrome"
+                                >
+                                <div class="form-text">
+                                    macOS: <code>~/Library/Application Support/Google/Chrome</code><br>
+                                    Linux: <code>~/.config/google-chrome</code>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="chrome_profile_name" class="form-label">Profile Name</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="chrome_profile_name"
+                                    name="chrome_profile_name"
+                                    value="{{ settings.get('chrome_profile_name', 'Default') }}"
+                                    placeholder="Default"
+                                >
+                                <div class="form-text">
+                                    Usually <code>Default</code> or <code>Profile 1</code>, etc.
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="chrome_headed" class="form-label">Copied profile mode</label>
+                                <select
+                                    class="form-select"
+                                    id="chrome_headed"
+                                    name="chrome_headed"
+                                >
+                                    <option value="false" {% if settings.get('chrome_headed', 'false') != 'true' %}selected{% endif %}>
+                                        Headless (background)
+                                    </option>
+                                    <option value="true" {% if settings.get('chrome_headed', 'false') == 'true' %}selected{% endif %}>
+                                        Visible Chrome window
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    Applies when using user data path (not CDP). A visible window can reduce bot detection; LinkedIn often still needs CDP on macOS.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0 small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Without a debugging URL, a snapshot of profile files is copied to a
+                            temp folder when a review runs. On macOS, copied cookies may not
+                            decrypt, so you can look logged out on LinkedIn — use CDP above.
+                            Leave both CDP and user data path blank to disable <code>browse_page</code>.
+                        </div>
+                        <div class="mt-3 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-check-lg me-1"></i>Save
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-4 mb-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-2"></i>Save
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
+</script>
+{% endblock %}

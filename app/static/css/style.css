@@ -1,0 +1,129 @@
+#sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+}
+
+.score-badge {
+    font-size: 1.1rem;
+    min-width: 3rem;
+    text-align: center;
+}
+
+.score-high { background-color: #198754 !important; }
+.score-medium { background-color: #ffc107 !important; color: #000 !important; }
+.score-low { background-color: #dc3545 !important; }
+
+.thread-message {
+    border-left: 3px solid #dee2e6;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+.thread-message.role-assistant {
+    border-left-color: #0d6efd;
+}
+
+.thread-message.role-user {
+    border-left-color: #198754;
+}
+
+.thread-message.role-tool_call {
+    border-left-color: #6f42c1;
+}
+
+.thread-message.role-tool_result {
+    border-left-color: #fd7e14;
+}
+
+.thread-message.role-system {
+    border-left-color: #6c757d;
+}
+
+.tool-content {
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}
+
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
+
+.candidate-file-row:hover {
+    background-color: #f8f9fa;
+}
+
+.editable:hover {
+    background-color: #e9ecef;
+    cursor: pointer;
+    border-radius: 0.25rem;
+}
+
+.progress-bar-animated {
+    transition: width 0.5s ease;
+}
+
+/* Session results: full LLM message rendered as markdown */
+.reasoning-md {
+    line-height: 1.5;
+}
+.reasoning-md h1,
+.reasoning-md h2,
+.reasoning-md h3,
+.reasoning-md h4 {
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+.reasoning-md h1:first-child,
+.reasoning-md h2:first-child,
+.reasoning-md h3:first-child {
+    margin-top: 0;
+}
+.reasoning-md pre,
+.reasoning-md code {
+    font-size: 0.85em;
+}
+.reasoning-md pre {
+    background: #e9ecef;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+.reasoning-md ul,
+.reasoning-md ol {
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.reasoning-md blockquote {
+    border-left: 3px solid #ced4da;
+    margin: 0.5rem 0;
+    padding-left: 0.75rem;
+    color: #495057;
+}
+.reasoning-md table {
+    font-size: 0.9em;
+}
+.reasoning-md p:last-child {
+    margin-bottom: 0;
+}
+
+textarea.prompt-editor {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    min-height: 300px;
+}

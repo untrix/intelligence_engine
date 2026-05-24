@@ -1,0 +1,45 @@
+[project]
+name = "intelligence_engine"
+version = "0.1.0"
+description = "LLM agents platform"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    # --- Backend web framework ---
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic-settings",
+    "python-multipart",
+    "aiofiles",
+
+    # --- UI / Templates (HTMX, Bootstrap, Bootstrap Icons come from CDN, no Python pkg) ---
+    "jinja2",
+    "markdown>=3.5",
+
+    # --- Persistence ---
+    "sqlalchemy[asyncio]",
+    "aiosqlite",
+    "alembic",
+
+    # --- LLM providers (all with native tool / function calling) ---
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "boto3",
+
+    # --- Agent web/browser tools ---
+    "httpx",
+    "playwright",
+    "beautifulsoup4",
+    "ddgs",
+
+    # --- Agent file-reading tools ---
+    "pypdf",
+    "python-docx",
+
+    # --- Prompt rendering ---
+    "chevron",
+
+    # --- Packaging / dependency management ---
+    "uv",
+]
