@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workflow.name }} - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-diagram-3 me-2"></i>{{ workflow.name }}
+            </h1>
+            <div class="text-muted small">Workflow #{{ workflow.id }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="/workflows">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <a class="btn btn-primary" href="/workflows/{{ workflow.id }}/edit">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="mb-4">
+                <h2 class="h6 text-muted text-uppercase">Playbook</h2>
+                <p class="mb-0">{{ workflow.playbook_name }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h2 class="h6 text-muted text-uppercase">Prompt Template</h2>
+                <pre class="bg-light p-3 rounded mb-0" style="white-space: pre-wrap;">{{ workflow.user_prompt_template }}</pre>
+            </div>
+
+            <div class="mb-4">
+                <h2 class="h6 text-muted text-uppercase">User Prompt Variables</h2>
+                {% if variables %}
+                {% for variable in variables %}
+                <span class="badge text-bg-secondary me-1">{{ variable }}</span>
+                {% endfor %}
+                {% else %}
+                <span class="text-muted">No variables</span>
+                {% endif %}
+            </div>
+
+            <div>
+                <h2 class="h6 text-muted text-uppercase">Allowed Tools</h2>
+                {% if tools %}
+                {% for tool in tools %}
+                <span class="badge text-bg-secondary me-1">{{ tool }}</span>
+                {% endfor %}
+                {% else %}
+                <span class="text-muted">No tools selected</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Runs - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-chat-dots me-2"></i>Runs
+        </h1>
+    </div>
+
+    {% if runs %}
+    <div class="d-grid gap-3">
+        {% for run in runs %}
+        <div class="workflow-row border rounded-3 p-3 text-start d-flex justify-content-between align-items-center gap-3">
+            <a class="text-decoration-none text-reset flex-grow-1 d-flex justify-content-between align-items-center"
+               href="/runs/{{ run.id }}">
+                <div>
+                    <div class="fw-semibold">{{ run.workflow_name }}</div>
+                    <div class="small text-muted">
+                        Run #{{ run.id }} · {{ run.provider }} / {{ run.model }} ·
+                        Started {{ run.started_at.strftime('%Y-%m-%d %H:%M') if run.started_at else '—' }}
+                        {% if run.ended_at %}
+                        · Ended {{ run.ended_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    {% if run.status == 'running' %}
+                    <span class="badge text-bg-primary">running</span>
+                    {% elif run.status == 'done' %}
+                    <span class="badge text-bg-success">done</span>
+                    {% elif run.status == 'error' %}
+                    <span class="badge text-bg-danger">error</span>
+                    {% else %}
+                    <span class="badge text-bg-secondary">{{ run.status }}</span>
+                    {% endif %}
+                    <i class="bi bi-chevron-right text-muted me-3"></i>
+                </div>
+            </a>
+            <form method="post"
+                  action="/runs/{{ run.id }}/delete"
+                  class="m-0"
+                  onsubmit="return confirm('Delete this run and its chat history?');">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card shadow-sm">
+        <div class="card-body text-center text-muted py-5">
+            <i class="bi bi-chat-dots fs-1 d-block mb-3"></i>
+            <p class="mb-3">No workflow runs yet.</p>
+            <a class="btn btn-primary" href="/workflows">Go to Workflows</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

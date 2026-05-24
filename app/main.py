@@ -44,6 +44,9 @@ async def lifespan(app: FastAPI):
     _configure_logging()
     _cleanup_stale_browser_temps()
     await init_db()
+    from app.services.workflow_runner import mark_stale_running_runs
+
+    await mark_stale_running_runs()
     await _seed_defaults()
     yield
 
@@ -72,10 +75,14 @@ def get_templates() -> Jinja2Templates:
     return templates
 
 
-from app.routers import dashboard, settings as settings_router  # noqa: E402
+from app.routers import dashboard, playbooks, runs, settings as settings_router, tools, workflows  # noqa: E402
 
 app.include_router(dashboard.router)
 app.include_router(settings_router.router)
+app.include_router(workflows.router)
+app.include_router(runs.router)
+app.include_router(tools.router)
+app.include_router(playbooks.router)
 
 
 async def _seed_defaults():

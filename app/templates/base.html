@@ -9,9 +9,9 @@
     <link href="/static/css/style.css" rel="stylesheet">
 </head>
 <body>
-    <div class="d-flex" id="wrapper">
+    <div class="d-flex vh-100 overflow-hidden" id="wrapper">
         <!-- Sidebar -->
-        <nav id="sidebar" class="bg-dark text-white d-flex flex-column" style="width: 250px; min-height: 100vh;">
+        <nav id="sidebar" class="bg-dark text-white d-flex flex-column flex-shrink-0 h-100 overflow-auto" style="width: 250px; min-width: 250px;">
             <div class="p-3">
                 <h5 class="mb-0">
                     <i class="bi bi-cpu-fill me-2"></i>Intelligence Engine
@@ -21,18 +21,33 @@
             <hr class="text-secondary my-0">
             <ul class="nav flex-column p-2">
                 <li class="nav-item">
-                    <a class="nav-link text-white {% if active_page == 'dashboard' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
-                       href="/">
-                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    <a class="nav-link text-white {% if active_page == 'runs' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
+                       href="/runs">
+                        <i class="bi bi-chat-dots me-2"></i>Runs
                     </a>
                 </li>
-                <li class="nav-item mt-2">
-                    <small class="text-secondary text-uppercase px-3 fw-semibold" style="font-size: 0.7rem;">System</small>
+                <li class="nav-item">
+                    <a class="nav-link text-white {% if active_page == 'workflows' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
+                       href="/workflows">
+                        <i class="bi bi-diagram-3 me-2"></i>Workflows
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white {% if active_page == 'settings' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
                        href="/settings">
                         <i class="bi bi-gear me-2"></i>Settings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {% if active_page == 'playbooks' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
+                       href="/playbooks">
+                        <i class="bi bi-map me-2"></i>Playbooks
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {% if active_page == 'integrations' %}fw-bold bg-secondary bg-opacity-25 rounded{% endif %}"
+                       href="/integrations">
+                        <i class="bi bi-plug me-2"></i>Integrations
                     </a>
                 </li>
             </ul>
@@ -50,7 +65,7 @@
         </nav>
 
         <!-- Main content -->
-        <div class="flex-grow-1">
+        <div class="flex-grow-1 overflow-auto h-100">
             <main class="p-4">
                 <!-- Toast container for notifications -->
                 <div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container"></div>

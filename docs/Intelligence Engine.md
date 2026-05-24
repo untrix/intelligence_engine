@@ -67,7 +67,7 @@ A workflow is the central unit of computation. The user defines a workflow and t
 * A Workflow Contains  
   * Prompts (system and user):  
     * User develops these prompts  
-    * Must point to internal or external websites to visit  
+    * Mention internal or external websites to visit as natural part of instructions
   * Tools available to use (via. MCP): User selects from available tools.  
   * Agent Orchestration Playbook (see below)  
   * Uploaded Files
@@ -76,16 +76,17 @@ A workflow is the central unit of computation. The user defines a workflow and t
 * Run on demand or automatically  
   * Chat threads are viewable and interruptible
   * Chat threads are resumable  
-* Agent Orchestration Playbook: Defines a set of agents and how they cooperate to run a task.  
-  * A set of playbooks is coded into the product in case they are needed to cater to different categories of tasks. Grows over time if needed (or shrinks if LLMs grow smarter)
+* Agent Orchestration Playbook: Defines a set of agents and how they cooperate to run a task.
+The simplest playbook is “Single-Turn + Multiple Toolcalls”. There is only one agent. The workflow stops after the LLM returns a response that’s not a toolcall. Usually the LLM will call multiple tools (e.g. navigate webpages, search the web etc.) and finish its task before it generates a response. This works in a lot of use-cases. There are more complex orchestration patterns where there are multiple cooperating agents with specific roles. For e.g. there could be a main orchestrator, a planner, a verifier and a summarizer implementing the ReAct pattern. Then there could be playbooks implementing specific algorithms such as Montecarlo Tree Search (MCTS). These will be maintained by us.
 * Workflows are stored in a central database against the username.
 
 ### **Competition**
 
 Though I haven’t conducted an exhaustive review of competition, one can expect a fair amount of competition in this area. Claude Cowork, Hermes, OpenClaw come to mind. So far, these products demand quite a high level of technical skillset on part of the end-user. Therefore our product strategy will have to focus on expanding the target user base by making the product extremely easy to install, use, integrate and secure. This sentiment spawned ideas like local-browser based integration, the workflow builder & compiler concept and inbuilt-firewall and autobuilding workflow GUI.
 
-#### **Unresolved Issues**
+#### **Unresolved Issues and ToDos**
 1. Headless deployment for the enterprise (but this may not be necessary)  
 2. Browser Integration:
    1. Clunky: A separate copy of Chrome browser needs to be started in develper mode (make chrome-debug). This needs a better long-term solution.
    3. Risky: Dependency on the chrome debug mode is risky because the functionality can be taken away at any time. A more dependable solution is neeed.
+   3. Solution TBD: Bundle browser along with the app.

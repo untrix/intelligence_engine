@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Run #{{ run.id }} - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="bi bi-chat-dots me-2"></i>{{ run.workflow_name }}
+            </h1>
+            <div class="text-muted d-flex flex-wrap align-items-center gap-2">
+                <span>Run #{{ run.id }}</span>
+                {% if run.status == 'running' %}
+                <span class="badge text-bg-primary">running</span>
+                {% elif run.status == 'done' %}
+                <span class="badge text-bg-success">done</span>
+                {% elif run.status == 'error' %}
+                <span class="badge text-bg-danger">error</span>
+                {% else %}
+                <span class="badge text-bg-secondary">{{ run.status }}</span>
+                {% endif %}
+                <span>{{ run.provider }} / {{ run.model }}</span>
+                <span>Started {{ run.started_at.strftime('%Y-%m-%d %H:%M') if run.started_at else '—' }}</span>
+                {% if run.ended_at %}
+                <span>Ended {{ run.ended_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="/runs" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Runs
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-chat-dots me-1"></i>Chat History</span>
+            {% if run.status == 'running' %}
+            <span class="text-info small">
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                Running — auto-refreshing
+            </span>
+            {% endif %}
+        </div>
+        <div class="card-body" style="max-height: 70vh; overflow-y: auto;" id="messages-scroll">
+            <div id="run-messages-panel"
+                 {% if run.status == 'running' %}
+                 hx-get="/runs/{{ run.id }}/messages"
+                 hx-trigger="every 2s"
+                 hx-swap="innerHTML"
+                 {% endif %}>
+                {% include "runs/_messages.html" %}
+            </div>
+        </div>
+    </div>
+
+    {% if run.status in ('done', 'error') %}
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-reply me-1"></i>Resume Chat
+        </div>
+        <div class="card-body">
+            <form method="post" action="/runs/{{ run.id }}/resume">
+                <div class="mb-3">
+                    <textarea
+                        name="user_message"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Type a follow-up message to the AI..."
+                        required
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send me-1"></i>Send
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var scrollEl = document.getElementById('messages-scroll');
+    if (scrollEl) {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target && event.detail.target.id === 'run-messages-panel') {
+            var el = document.getElementById('messages-scroll');
+            if (el) {
+                el.scrollTop = el.scrollHeight;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

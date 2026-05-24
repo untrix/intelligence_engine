@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-plus-lg me-2"></i>{{ title }}
+        </h1>
+        <a class="btn btn-outline-secondary" href="/workflows">
+            <i class="bi bi-arrow-left me-1"></i>Back to Workflows
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ form_action }}">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h2 class="h5 mb-0">Name</h2>
+            </div>
+            <div class="card-body">
+                <input
+                    type="text"
+                    class="form-control form-control-lg"
+                    id="name"
+                    name="name"
+                    value="{{ workflow_name }}"
+                    placeholder="e.g. Weekly finance report"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h2 class="h5 mb-0">Playbook</h2>
+            </div>
+            <div class="card-body">
+                <select class="form-select form-select-lg" id="playbook_name" name="playbook_name">
+                    {% for playbook_name in playbook_names %}
+                    <option value="{{ playbook_name }}" {% if playbook_name == selected_playbook %}selected{% endif %}>
+                        {{ playbook_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">
+                    The workflow inherits its system prompt from the selected playbook. In this PoC, playbook system prompts are empty illustrations.
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h2 class="h5 mb-1">Prompt Template</h2>
+                <div class="small text-white-50">
+                    Workflow instructions with placeholders / variables in double curly braces e.g., {{ "{{name}}" }}
+                </div>
+            </div>
+            <div class="card-body">
+                <textarea
+                    class="form-control font-monospace"
+                    id="user_prompt_template"
+                    name="user_prompt_template"
+                    rows="12"
+                    required
+                >{{ user_prompt_template }}</textarea>
+                <div class="form-text">
+                    Variables found here will be saved with the workflow and requested when the workflow is run.
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h2 class="h5 mb-0">Allowed Tools</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for tool in available_tools %}
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="tool_{{ loop.index }}"
+                                name="allowed_tools"
+                                value="{{ tool }}"
+                                {% if tool in selected_tools %}checked{% endif %}
+                            >
+                            <label class="form-check-label" for="tool_{{ loop.index }}">
+                                <code>{{ tool }}</code>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-text mt-2">
+                    Workflow execution will use this tool list when calling the LLM.
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-4">
+            <a class="btn btn-outline-secondary" href="/workflows">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>Save
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

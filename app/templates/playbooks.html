@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Playbooks - Intelligence Engine{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-map me-2"></i>Agent Orchestration Playbooks
+        </h1>
+    </div>
+
+    <div class="alert alert-info">
+        Every Playbook comes with an orchestration algorithm, possibly multiple agents each playing a different role,
+        and a set of tools available to them. Playbooks have not been implemented in this PoC, therefore what you see
+        below are just illustrations. All workflows at this time will run a Single Turn pattern with possible multiple
+        tool calls.
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <label for="playbook_select" class="form-label h5 mb-2">
+                Playbook
+            </label>
+            <select
+                class="form-select form-select-lg border-primary shadow-sm mb-4"
+                id="playbook_select"
+                onchange="window.location = '/playbooks?playbook=' + encodeURIComponent(this.value)"
+            >
+                {% for playbook_name in playbook_names %}
+                <option value="{{ playbook_name }}" {% if playbook_name == selected_playbook %}selected{% endif %}>
+                    {{ playbook_name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <div class="border rounded bg-light-subtle p-3">
+                <h2 class="h6 mb-1">System Prompt</h2>
+                <div class="small text-muted">
+                    Empty, since this is just an illustration
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

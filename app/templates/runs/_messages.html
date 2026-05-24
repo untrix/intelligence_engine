@@ -1,0 +1,26 @@
+{% if run.error %}
+<div class="alert alert-danger" role="alert">
+    <strong>Run error</strong>
+    <pre class="small mb-0 mt-2 text-wrap" style="white-space: pre-wrap;">{{ run.error }}</pre>
+</div>
+{% endif %}
+
+<div id="messages-container">
+    {% for msg in messages %}
+    <div class="thread-message role-{{ msg.role }}">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong>
+                {% if msg.role == 'tool_call' %}
+                Tool call{% if msg.tool_name %}: <code>{{ msg.tool_name }}</code>{% endif %}
+                {% elif msg.role == 'tool_result' %}
+                Tool result{% if msg.tool_name %}: <code>{{ msg.tool_name }}</code>{% endif %}
+                {% else %}
+                {{ msg.role|title }}
+                {% endif %}
+            </strong>
+            <span class="small text-muted">#{{ msg.sequence }}</span>
+        </div>
+        <div class="tool-content">{{ msg.content or "" }}</div>
+    </div>
+    {% endfor %}
+</div>
