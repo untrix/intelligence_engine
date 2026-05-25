@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_ROOT="${AGENT_PLATFORM_ROOT:-"$HOME/AgentPlatform"}"
-IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/agent-platform/agent-platform:latest}"
+IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/untrix/intelligence_engine:dev}"
 COMPOSE_FILE="$INSTALL_ROOT/docker-compose.yml"
 
 mkdir -p "$INSTALL_ROOT/data"
@@ -48,5 +48,5 @@ Docker Compose file:
    http://localhost:8001
 
 Override the image before running this installer with:
-  AGENT_PLATFORM_IMAGE=ghcr.io/<owner>/<image>:<tag>
+  AGENT_PLATFORM_IMAGE=ghcr.io/untrix/intelligence_engine:<tag>
 EOF

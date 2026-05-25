@@ -1,4 +1,4 @@
-# Intelligence Engine
+# Agent Platform (Intelligence Engine)
 
 LLM agents platform for developing and hosting enterprise agentic workflows.
 
@@ -8,12 +8,14 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
 ## Prerequisites
 
 - Runs on Mac only
-- Python 3.13
 - Google Chrome (for local-browser agent tools via CDP)
-- Optional: Docker Desktop (for running the app container with host Agent Chrome)
-- Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
 - LLM API Key (OpenAI preferred)
 - Optional but preferrable: Zapier MCP Server URL and token
+- Non Developers - Install via Docker
+    - Docker Desktop
+- Developers - Clone the Repo
+    - Python 3.13
+    - Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
 
 ## First-time setup
 
@@ -34,7 +36,7 @@ Option A runs only the Agent Platform app in Docker. Agent Chrome remains a norm
 For an end-user style install, run the Mac setup script from this repository URL:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/main/scripts/install-agent-platform-mac.sh | bash
+curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/dev/scripts/install-agent-platform-mac.sh | bash
 ```
 
 The script creates:
