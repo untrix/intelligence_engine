@@ -77,7 +77,7 @@ TOOL_DEFINITIONS = [
                 "other files, subfolders, and Google Docs shortcuts (.gdoc) that "
                 "cannot be read. Use when the prompt gives a folder path and you "
                 "only need to see what is inside before reading. Paths relative "
-                "to the app home directory are accepted."
+                "to the configured workspace root are accepted."
             ),
             "parameters": {
                 "type": "object",
@@ -100,7 +100,7 @@ TOOL_DEFINITIONS = [
                 "recursive) and return their text content. Use when the prompt "
                 "gives a folder path such as job files or candidate documents. "
                 "Supports text files, PDF, and DOCX. Paths relative to the app "
-                "home directory are accepted."
+                "configured workspace root are accepted."
             ),
             "parameters": {
                 "type": "object",
@@ -296,11 +296,11 @@ async def _fetch_url(url: str) -> str:
 
 
 def _resolve_local_path(path: str) -> Path:
-    """Expand user/home-relative paths against the configured app home directory."""
+    """Expand relative paths against the configured workspace root."""
     raw = (path or "").strip()
     p = Path(raw).expanduser()
     if not p.is_absolute():
-        p = (settings.home_dir / p).resolve()
+        p = (settings.workspace_root / p).resolve()
     else:
         p = p.resolve()
     return p

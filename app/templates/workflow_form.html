@@ -74,6 +74,8 @@
                 >{{ user_prompt_template }}</textarea>
                 <div class="form-text">
                     Variables found here will be saved with the workflow and requested when the workflow is run.
+                    If a variable is used as a local file or folder path, relative paths resolve against
+                    <code>{{ app_home_dir }}</code>. Use an absolute path for files outside that directory.
                 </div>
             </div>
         </div>

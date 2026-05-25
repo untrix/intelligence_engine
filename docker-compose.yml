@@ -1,0 +1,19 @@
+services:
+  agent-platform:
+    build:
+      context: .
+    image: ${AGENT_PLATFORM_IMAGE:-agent-platform:latest}
+    ports:
+      - "8001:8001"
+    environment:
+      INTELLIGENCE_ENGINE_HOST: 0.0.0.0
+      INTELLIGENCE_ENGINE_PORT: "8001"
+      INTELLIGENCE_ENGINE_DATA_DIR: /app/data
+      INTELLIGENCE_ENGINE_WORKSPACE_ROOT: /workspace
+      INTELLIGENCE_ENGINE_CHROME_CDP_URL: http://host.docker.internal:9222
+    volumes:
+      - ${AGENT_PLATFORM_DATA_DIR:-${HOME}/AgentPlatform/data}:/app/data
+      - ${AGENT_PLATFORM_WORKSPACE_DIR:-${HOME}/AgentPlatform/workspace}:/workspace:ro
+      - ${AGENT_PLATFORM_APP_WORKSPACE_DIR:-${HOME}/AgentPlatform/workspace/.AgentPlatform}:/workspace/.AgentPlatform:rw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

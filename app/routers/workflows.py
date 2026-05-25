@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.main import get_templates
 from app.models import WorkflowDefinition
@@ -107,6 +108,7 @@ async def _workflow_form_context(
         "zapier_mcp_configured": zapier_ok,
         "selected_tools": selected_tools,
         "user_prompt_template": user_prompt_template,
+        "app_home_dir": str(settings.workspace_root),
         "error": error,
     }
 
@@ -131,6 +133,7 @@ async def workflows(
             "workflows": workflows_with_variables,
             "missing_sample_slugs": missing_sample_slugs(existing_slugs),
             "show_seeded_notice": seeded == "1",
+            "app_home_dir": str(settings.workspace_root),
         },
     )
 
@@ -153,6 +156,7 @@ async def _workflow_detail_context(workflow: WorkflowDefinition) -> dict:
         "tools": json.loads(workflow.allowed_tools_json or "[]"),
         "is_sample": bool(workflow.seed_slug),
         "quick_start": manifest.variable_defaults if manifest else None,
+        "app_home_dir": str(settings.workspace_root),
     }
 
 

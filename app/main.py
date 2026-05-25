@@ -40,10 +40,25 @@ def _cleanup_stale_browser_temps():
             logger.warning("Could not remove stale temp dir: %s", d)
 
 
+def _seed_workspace_sample_data():
+    """Copy bundled sample files into the writable app-managed workspace folder."""
+    source = BASE_DIR.parent / ".AgentPlatform" / "Sample Data"
+    target = settings.workspace_root / ".AgentPlatform" / "Sample Data"
+    if not source.is_dir() or source.resolve() == target.resolve() or target.exists():
+        return
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, target)
+        logger.info("Installed sample data into workspace: %s", target)
+    except Exception:
+        logger.warning("Could not install sample data into workspace: %s", target)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _configure_logging()
     _cleanup_stale_browser_temps()
+    _seed_workspace_sample_data()
     await init_db()
     from app.services.workflow_runner import mark_stale_running_runs
 
@@ -103,7 +118,7 @@ async def _seed_defaults():
         "google_api_key": "",
         "aws_profile": "",
         "aws_region": "us-east-1",
-        "chrome_cdp_url": "http://127.0.0.1:9222",
+        "chrome_cdp_url": settings.chrome_cdp_url,
         "zapier_mcp_enabled": "false",
         "zapier_mcp_server_url": "",
         "zapier_mcp_api_token": "",

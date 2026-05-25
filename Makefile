@@ -1,4 +1,4 @@
-.PHONY: setup compile sync install deps dev run clean chrome-debug chrome-debug-check migrate
+.PHONY: setup compile sync install deps dev run clean chrome-debug chrome-debug-check migrate docker-build docker-up docker-down docker-logs
 
 PYTHON := python3.13
 VENV := .venv
@@ -9,8 +9,10 @@ UV_CMD := $(if $(wildcard $(UV)),$(UV),uv)
 
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 -include $(PROJECT_ROOT)/.env
-INTELLIGENCE_ENGINE_HOME_DIR ?= $(PROJECT_ROOT)
-INTELLIGENCE_ENGINE_DATA_DIR ?= $(INTELLIGENCE_ENGINE_HOME_DIR)/data
+INTELLIGENCE_ENGINE_WORKSPACE_ROOT ?= $(PROJECT_ROOT)
+INTELLIGENCE_ENGINE_HOME_DIR ?= $(INTELLIGENCE_ENGINE_WORKSPACE_ROOT)
+INTELLIGENCE_ENGINE_DATA_DIR ?= $(PROJECT_ROOT)/data
+AGENT_PLATFORM_IMAGE ?= agent-platform:latest
 CHROME ?= "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 DEBUG_PORT ?= 9222
 CHROME_PROFILE ?= Default
@@ -37,6 +39,18 @@ run:
 
 migrate:
 	$(VENV_BIN)/alembic upgrade head
+
+docker-build:
+	docker build -t $(AGENT_PLATFORM_IMAGE) .
+
+docker-up:
+	docker compose up --build
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f agent-platform
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

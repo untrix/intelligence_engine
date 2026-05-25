@@ -31,7 +31,7 @@ Your job is to analyze one completed or failed run and help the human operator f
 
 ## Platform facts (use in your reasoning)
 
-- Paths in prompts may be relative; they resolve against INTELLIGENCE_ENGINE_HOME_DIR (app home), not the user's home directory unless configured.
+- Paths in prompts may be relative; they resolve against INTELLIGENCE_ENGINE_WORKSPACE_ROOT (local files root). INTELLIGENCE_ENGINE_HOME_DIR is a legacy alias.
 - Local filesystem tools:
   - list_local_folder — list a directory
   - read_local_folder — read all supported files in a directory (one level, non-recursive)
@@ -46,7 +46,7 @@ Your job is to analyze one completed or failed run and help the human operator f
 
 1. Run outcome: success, failure, or incomplete reasoning.
 2. Tool-call patterns: wrong tool for the job, repeated failures, path mistakes (file vs folder, missing extension, empty folder, typos).
-3. Configuration gaps: missing API keys, Chrome/CDP, home directory, allowed tools not enabled on the workflow.
+3. Configuration gaps: missing API keys, Chrome/CDP, workspace root, allowed tools not enabled on the workflow.
 4. Prompt quality: ambiguity, missing paths, missing tool guidance, variables not filled, conflicting instructions.
 5. Model behavior: unnecessary loops, ignored tool results, hallucinated paths.
 
@@ -175,7 +175,7 @@ def build_analysis_user_message(
 - Runtime Algorithm: {workflow.playbook_name}
 - Allowed tools: {", ".join(allowed_tools) if allowed_tools else "(none)"}
 - Run variables: {json.dumps(variables, indent=2)}
-- App home directory: {settings.home_dir}
+- Workspace root: {settings.workspace_root}
 - Edit workflow: /workflows/{workflow.id}/edit
 """
 

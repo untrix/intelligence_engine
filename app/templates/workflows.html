@@ -91,10 +91,14 @@
                                 {% if item.is_sample and item.variable_defaults %}
                                 <p class="text-muted small mb-3">
                                     Sample defaults are filled in below. Edit any field before you run.
+                                    Local file or folder path values are resolved relative to
+                                    <code>{{ app_home_dir }}</code> unless you enter an absolute path.
                                 </p>
                                 {% else %}
                                 <p class="text-muted small mb-3">
                                     Enter values for the variables used by this workflow prompt.
+                                    Local file or folder path values are resolved relative to
+                                    <code>{{ app_home_dir }}</code> unless you enter an absolute path.
                                 </p>
                                 {% endif %}
                                 {% for variable in item.variables %}

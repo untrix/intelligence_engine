@@ -32,11 +32,13 @@ class Settings(BaseSettings):
 
     app_name: str = "Intelligence Engine"
     home_dir: Path = Field(default_factory=_default_home_dir)
+    workspace_root: Path | None = Field(default=None)
     data_dir: Path | None = Field(default=None)
     database_url: str = ""
     host: str = "0.0.0.0"
     port: int = 8001
     debug: bool = False
+    chrome_cdp_url: str = "http://127.0.0.1:9222"
     bedrock_connect_timeout_seconds: int = 60
     bedrock_read_timeout_seconds: int = 900
 
@@ -49,6 +51,13 @@ class Settings(BaseSettings):
             return _default_home_dir()
         return _parse_path(v)
 
+    @field_validator("workspace_root", mode="before")
+    @classmethod
+    def _normalize_workspace_root(cls, v):
+        if v is None:
+            return None
+        return _parse_path(v)
+
     @field_validator("data_dir", mode="before")
     @classmethod
     def _normalize_data_dir(cls, v):
@@ -57,7 +66,9 @@ class Settings(BaseSettings):
         return _parse_path(v)
 
     @model_validator(mode="after")
-    def _derive_data_dir(self):
+    def _derive_paths(self):
+        if self.workspace_root is None:
+            object.__setattr__(self, "workspace_root", self.home_dir)
         if self.data_dir is None:
             object.__setattr__(self, "data_dir", self.home_dir / "data")
         return self

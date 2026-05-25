@@ -12,8 +12,9 @@ re-enabled later. Do not fall back to them when CDP is unset or fails.
 import logging
 import os
 import shutil
+import socket
 import tempfile
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup, Comment
 
@@ -165,6 +166,22 @@ async def _connect_cdp(cdp_url: str) -> tuple[object, object, None, bool]:
     return pw, context, None, True
 
 
+def _normalize_cdp_url(cdp_url: str) -> str:
+    """Resolve Docker's host alias to an IP because Chrome rejects that Host header."""
+    parsed = urlsplit(cdp_url)
+    if parsed.hostname != "host.docker.internal":
+        return cdp_url
+    try:
+        host_ip = socket.gethostbyname(parsed.hostname)
+    except OSError:
+        return cdp_url
+    netloc = host_ip
+    if parsed.port:
+        netloc = f"{netloc}:{parsed.port}"
+    logger.info("Resolved Docker CDP host alias %s to %s", parsed.hostname, host_ip)
+    return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+
+
 async def create_browser_context(
     chrome_profile_path: str,
     chrome_profile_name: str = "Default",
@@ -184,7 +201,7 @@ async def create_browser_session_from_settings(settings: dict) -> tuple[
     """Build a Playwright session from Settings (CDP URL only)."""
     cdp_url = (settings.get("chrome_cdp_url") or "").strip()
     if cdp_url:
-        return await _connect_cdp(cdp_url)
+        return await _connect_cdp(_normalize_cdp_url(cdp_url))
     return None, None, None, False
 
 
