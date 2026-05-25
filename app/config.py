@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     data_dir: Path | None = Field(default=None)
     database_url: str = ""
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8001
     debug: bool = False
     bedrock_connect_timeout_seconds: int = 60
     bedrock_read_timeout_seconds: int = 900
