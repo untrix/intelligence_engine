@@ -195,11 +195,16 @@ The important design point is that the Agent Platform does not replace company i
 
 The connector strategy has three tiers.
 
-### 1. MCP and Structured Connectors
+### 1. Browser-Based Access
 
-MCP is the preferred path for structured integrations, especially for company-managed writes. It provides a common protocol for connecting to SaaS and internal systems while allowing the platform to centralize policy, token management, and audit.
+Browser access is the broadest compatibility path. If a user can perform a workflow in a web app, the Agent Platform can often read or interact with that app through the browser.
 
-Each connector target should be treated as a federated system with its own AAA model. The Agent Platform governs whether a workflow is allowed to call a connector, but the connector target still enforces its own permissions and produces its own audit trail.
+Browser reads are generally safer and more reliable than browser writes. UI-based writes are clunky, expensive, slow and error prone.
+
+
+### 2. MCP and Structured Connectors
+
+MCP provides a common protocol for connecting to SaaS and internal systems while allowing the platform to centralize policy, token management, and audit. MCP providers are very mature at this point, with Zapier and Cloudflare providing thousands of actions. That said, they're still traditional software and therefore still brittle.
 
 Examples:
 
@@ -209,48 +214,9 @@ Examples:
 4. GitHub operations.
 5. Internal systems exposed through company-approved MCP servers.
 
-### 2. Browser-Based Access
-
-Browser access is the broadest compatibility path. If a user can perform a workflow in a web app, the Agent Platform can often read or interact with that app through the browser.
-
-This is especially useful when:
-
-1. No API exists.
-2. API access is hard to obtain.
-3. The workflow depends on human-facing pages.
-4. The user already has SSO access in the browser.
-
-Browser reads are generally safer and more reliable than browser writes. UI-based writes should be treated as higher risk and may require human confirmation.
-
-Browser-based access also follows the federated model: the target app remains responsible for its own login session, permissions, and native audit logs.
-
-### 3. Bespoke API Connectors
-
-Bespoke API connectors should be reserved for high-value systems where MCP is unavailable and the API is stable enough to justify maintenance.
-
-They should not become the default strategy because per-service integrations recreate the maintenance burden the product is trying to avoid.
-
 ## Audit-Trail Design
 
-The audit trail should answer four questions:
-
-1. Who initiated the workflow?
-2. What did the agent see and decide?
-3. What systems did it touch?
-4. What did it change?
-
-At a high level, each run should capture:
-
-1. Workflow version and Runtime Algorithm.
-2. User identity, organization context, and executing Agent Platform node.
-3. Rendered prompt inputs after redaction.
-4. Model interactions at transcript or metadata level, depending on policy.
-5. Tool and connector calls.
-6. Read/write classification for each external action.
-7. Human approvals or denials.
-8. Final output and run status.
-
-In Company-Managed mode, audit records, chat history, and dashboards are stored by Agent Platform Inc. on the company's behalf. They should also be exportable to company SIEM, data-lake, or log-store infrastructure and should support retention, redaction, and tamper-evidence requirements.
+In Company-Managed mode, audit records, chat history, and dashboards are stored by Agent Platform Inc. (SaaS) on the company's behalf. They should also be exportable to company SIEM, data-lake, or log-store infrastructure and should support retention, redaction, and tamper-evidence requirements.
 
 The run transcript is useful for debugging and user review. The Agent Platform audit trail is the platform compliance record. Downstream federated systems, such as Google Workspace, Slack, or internal apps, may also produce their own audit records for the same action.
 
@@ -258,4 +224,4 @@ The run transcript is useful for debugging and user review. The Agent Platform a
 
 The Agent Platform should be understood as a governed, distributed execution layer for agentic workflows. It does not need to sit behind a literal company firewall to provide company control. Instead, it participates in the company's trust model: identity, policy, connector approval, secrets management, and audit.
 
-Self-Managed mode proves utility locally. Company-Managed mode keeps the product experience nearly identical while adding an IT governance plane through Agent Platform Inc.: managed configuration, connector constraints, security policies, managed secrets, audit storage, dashboards, and optional audit export.
+Self-Managed mode is a zero-integration wedge. Company-Managed mode keeps the product experience nearly identical while adding an IT governance plane: managed configuration, connector constraints, security policies, managed secrets, audit storage, dashboards, and optional audit export.

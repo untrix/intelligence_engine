@@ -1,4 +1,4 @@
-# Product Requirements Document: Enterprise Agent Platform (a.k.a. AA Firewall)
+# Product Requirements Document: Agent Platform (a.k.a. AA Firewall)
 
 ## Problem
 
@@ -21,7 +21,18 @@ This matters because every application already has a UI. In principle, any digit
 
 ## Product Overview
 
-The **Enterprise Agent Platform** securely hosts a company's agentic workflows. Agents running on the platform are treated like any other enterprise software: they must follow the company's security, privacy, audit, and compliance policies.
+The **Agent Platform** securely hosts agentic workflows. The same product can run in two management modes:
+
+1. **Self-Managed:** the end user manages settings, credentials, connectors, logs, and local storage (but would still need to log into the Company SSO in order to run workflows against their work app accounts)
+2. **Company-Managed:** Company IT manages or constrains settings, credentials, connector access, logs, and governance policy.
+
+This is similar to managed browser profiles or remote device management: Chrome is still Chrome whether a user opens a personal profile or a company-managed profile, and a laptop is still the same device class whether it is personally owned or IT-managed. The difference is who configures, governs, monitors, and audits it.
+
+Architecturally, the Agent Platform product, uses a **federated architecture with distributed runtime compute** rather than a traditional client-server enterprise app. Each Agent Platform node supplies runtime compute, whether it is a weak laptop, a powerful workstation, or a high-capacity managed worker. Other systems the platform interacts with — identity providers, SaaS apps, MCP servers, LLM gateways, internal tools — are independently governed systems in the broader federation, and each brings its own authentication, authorization, accces and audit controls.
+
+Governance is a separate plane. In Self-Managed mode, the user governs their own node. In Company-Managed mode, Company IT governs nodes through Agent Platform Inc.'s management portal by defining policy, configuration, connector allowlists, logging requirements, and security controls.
+
+When used for company work, agents running on the platform are treated like any other enterprise software: they must follow the company's security, privacy, audit, and compliance policies.
 
 The platform must integrate with:
 
@@ -30,7 +41,7 @@ The platform must integrate with:
 3. Internal and third-party applications.
 4. Company-approved MCP servers and related integration infrastructure.
 
-The product should make integration and adoption as frictionless as possible. That is essential for both enterprise rollout and bottom-up adoption.
+The product should make integration and adoption as frictionless as possible. That is essential for both self-serve individual adoption and company-managed rollout.
 
 ## Core Requirements
 
@@ -43,17 +54,17 @@ The product should make integration and adoption as frictionless as possible. Th
    - Let users define workflows in natural language instead of code.
    - Help users build, test, monitor, and improve workflows.
 
-3. **Enterprise-grade security**
+3. **Company-grade security and governance**
    - Preserve company security boundaries.
    - Provide auditability, policy enforcement, human-in-the-loop controls, rate limiting, and scope management.
 
 ## Main Features
 
-### Enterprise Integration
+### Integration Model
 
-#### Local Browser Integration
+#### Browser Based Integration
 
-The first adoption path is self-serve integration through a local web browser. The browser should ideally be integrated into the Agent Platform app, but for the 48 hour challenge PoC I've integrated a sidecar browswer via CDP. 
+The first adoption path is self-serve integration through a local web browser. The browser should ideally be integrated into the Agent Platform app, but for the 48-hour challenge PoC it is implemented as a sidecar browser via CDP.
 
 The app runs on a laptop or desktop. The user signs in to the sites they already have access to, and agents interact with those sites through the browser. This provides:
 
@@ -64,27 +75,33 @@ The app runs on a laptop or desktop. The user signs in to the sites they already
 
 The product can be thought of as an evolution of Cursor for non-technical work or an evolution of Comet + Perplexity: a natural-language environment where users can create and run useful workflows without writing software.
 
-This browser-first path is also useful outside the enterprise, which supports a personal version of the product.
+This browser-first path is useful in both Self-Managed and Company-Managed modes. The product experience should remain nearly identical; only management, policy, and audit behavior change.
 
-#### Enterprise and Personal Versions
+#### Self-Managed and Company-Managed Modes
 
-The platform can support two deployment models:
+The platform should be understood as one product with two management modes, not two separate architectures.
 
-1. **Enterprise version**
-   - Users sign in with company SSO.
-   - Workflows, settings, and runs are stored in a central IT-controlled database.
-   - Runs and workflow definitions can be inspected for security and compliance.
+1. **Self-Managed mode**
+   - The end user manages configuration.
+   - Workflows, settings, connector credentials, run transcripts, and logs stay in the local store unless the user explicitly configures otherwise.
+   - The user chooses which LLM endpoints, MCP servers, and tools to use.
+   - The user can still access company apps, company SaaS accounts, and company workflows when they authenticate through company SSO or the relevant company app account.
+   - Company systems still enforce their own AAA, so they remain behind the company's virtual firewall even when the Agent Platform node is self-managed.
+   - This mode can be free and can drive bottom-up adoption because employees can use company apps without requiring Company IT to deploy or configure the Agent Platform first.
 
-2. **Personal version**
-   - Workflows and settings are stored locally on the user's laptop.
-   - The user does not need to sign in to the platform itself.
-   - This version can be free and can drive bottom-up adoption.
+2. **Company-Managed mode**
+   - Company IT manages or constrains configuration through Agent Platform Inc.'s management portal.
+   - Company IT logs into Agent Platform Inc. to define policies, approve connectors, configure allowed LLM endpoints and tools, view dashboards, and review audit logs.
+   - End users must log into the Agent Platform product before using a Company-Managed Agent Platform node.
+   - Audit logs, including chats and tool-call history, are stored by Agent Platform Inc. on the company's behalf and may also be exported to the company's log store or SIEM.
+   - LLM endpoints, MCP servers, built-in tools, browser access, data scopes, and other integration points may be restricted by policy.
+   - Security and governance policies, including future governance firewall features, can be applied centrally.
 
-**PoC note:** The current PoC implements the personal version.
+**PoC note:** The current PoC implements the Self-Managed mode.
 
-#### MCP Server Integration
+#### Integration via MCP Servers
 
-The MCP ecosystem can connect the platform to thousands of SaaS applications. The enterprise strategy is to integrate with third-party MCP servers that the company already trusts or is willing to approve. The Platform will implement standard authentication protocols like OAuth. Auth tokens are stored in IT-controlled infrastructure and injected into MCP calls, so upstream audit logs reflect the actual user's identity rather than a shared service account.
+The MCP ecosystem can connect the platform to thousands of SaaS applications. In Self-Managed mode, users can configure their own MCP servers and credentials. In Company-Managed mode, Company IT can approve which MCP servers are available, constrain scopes, and require company-managed OAuth. Auth tokens are stored in approved infrastructure and injected into MCP calls, so upstream audit logs reflect the actual user's identity rather than a shared service account.
 
 ### Ease of Use
 
@@ -94,12 +111,12 @@ The product should include:
 
 1. Natural-language workflow authoring.
 2. An agent "IDE" that helps users develop, test, and debug workflows.
-3. Runtime scaffolding that makes workflows more reliable. E.g., Dynamically rendering a GUI for the workflow.
+3. Runtime scaffolding that makes workflows more reliable, such as dynamically rendering a GUI for the workflow.
 4. Prompt-building support, including a prompt compiler that rewrites rough instructions into detailed agent-ready prompts.
 
-### Enterprise Security
+### Security and Governance
 
-The Agent Platform inherits the company's security perimeter because users authenticate with company SSO. Secure connections between MCP clients and MCP servers are already a solved part of the ecosystem, but the platform must still provide a governance layer around agent execution.
+In Company-Managed mode, the Agent Platform inherits the company's governance model because Company IT controls policy and configuration through Agent Platform Inc.'s management portal. End users authenticate to the Agent Platform product before using a Company-Managed node. AAA is still federated across systems: company identity authenticates the user where needed, and downstream apps such as Google Workspace, Slack, Salesforce, MCP servers, or internal tools enforce their own authentication, authorization, and audit rules. This does not require the product to run behind a literal network firewall: many identity providers, SaaS apps, MCP servers, and LLM gateways are themselves third-party services. The relevant boundary is the company's identity, policy, audit, and data-governance boundary.
 
 The platform should enforce or support:
 
@@ -108,9 +125,9 @@ The platform should enforce or support:
 3. Human-in-the-loop approval.
 4. Rate limits.
 5. Per-workflow tool and data scopes.
-6. Company IT configuration and oversight.
+6. Company IT configuration and oversight in Company-Managed mode.
 
-Potential future firewall features:
+Potential future governance firewall features:
 
 1. Prompt compliance checks.
 2. Prompt-injection inspection for chat context.
@@ -137,7 +154,7 @@ A workflow contains:
 
 Workflows can run on demand or automatically. Runs should produce chat threads that are viewable, interruptible, and resumable.
 
-Workflows and runs are stored in a central database in the enterprise version and locally in the personal version.
+In Self-Managed mode, workflows, settings, runs, transcripts, and logs stay local by default, but workflows can still operate against company apps when the user has access through company AAA. In Company-Managed mode, the same product stores audit logs, chats, dashboards, policy, and configuration with Agent Platform Inc. on the company's behalf, while constraining settings and integration points according to IT policy.
 
 ## Agent Runtime
 
@@ -165,13 +182,13 @@ This strategy motivates several product ideas:
 
 1. Local-browser integration.
 2. Workflow builder and prompt compiler.
-3. Built-in firewall and policy enforcement.
+3. Built-in governance firewall and policy enforcement.
 4. Auto-generated workflow GUIs.
 
 ## Unresolved Issues
 
-1. **Enterprise headless deployment**
-   - Headless deployment may be needed for enterprise environments, but it is not yet clear whether it is required for the first product version.
+1. **Company-managed deployment model**
+   - The product should remain essentially the same across Self-Managed and Company-Managed modes. The main open question is which pieces of management should be central by default in Agent Platform Inc.'s control plane: policy distribution, audit storage/export, connector allowlists, secret storage, and optional managed runtime infrastructure.
 
 2. **Browser integration UX**
    - The current PoC requires a separate Chrome instance started in developer mode with `make chrome-debug`.

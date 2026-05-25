@@ -3,6 +3,7 @@
 LLM agents platform for developing and hosting enterprise agentic workflows.
 
 Product context and requirements: [docs/Intelligence Engine.md](docs/Intelligence%20Engine.md).
+Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Design%20Document.md).
 
 ## Prerequisites
 
