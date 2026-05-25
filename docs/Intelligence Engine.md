@@ -1,88 +1,191 @@
-# **Product Requirements Document: Enterprise Agent Platform (a.k.a. AA Firewall)**
+# Product Requirements Document: Enterprise Agent Platform (a.k.a. AA Firewall)
 
-Large companies depend on internal tools, dashboards, scripts, and data workflows developed and maintained inhouse. These tools, which are software programs, require expensive technical expertise to develop and maintain. They integrate with various internal apps via APIs that can break when a third party app. is upgraded. Additionally, such tooling also incorporates its own bugs and operational assumptions which are hard to trace back and fix, especially when the key people who developed them leave. In short, traditional software tools are expensive to develop and maintain. Additionally, staff that actually use the tools are not capable of developing and fixing them because they lack the technical (programming) expertise to do so. These tasks fall onto in-house IT and Technical Operations teams, who quickly become an operational bottleneck.
+## Problem
 
-The advent of AI agents provides a non-linear opportunity to solve the problems described above by replacing brittle tooling with resilient agentic workflows. For one, these workflows are much easier to write than traditional software and therefore can be developed by non-technical staff. Second, these agents can integrate with other apps via their human interfaces (UI) and therefore become agnostic to API changes. When the UX changes agents have the ability to recover in many cases, and if not, they can be fixed by non-technical staff because they are “programmed” in natural language. And since every app has a UI, virtually every app is now accessible with zero API integration effort. Even when the agent uses an API (e.g. through an MCP server) it has the intelligence to recover (in many cases) when faced with errors. Most importantly though, since agents behave like humans, all of the hitherto manual (digital) operations can now be automated. This opens up the market exponentially.
+Large companies depend on internal tools, dashboards, scripts, and data workflows. These tools are usually built and maintained by technical teams, even when the people who use them are non-technical business users.
 
-This PRD describes an **Enterprise AI Agent Platform** (the Agent platform) that securely hosts a company’s (henceforth the Company or Enterprise) agentic workflows (henceforth AI agents). AI agents running within this platform, just like any other software, are subject to the Company’s security, privacy and compliance policies. The Agent Platform must integrate with the company’s AAA (Authentication, Authorization and Access control) systems and be monitored by its security apparatus. Furthermore, integration into any company’s systems should be frictionless. This significantly helps adoption.
+This creates several problems:
 
-## **Product Features**
+1. Traditional software tools are expensive to build and maintain.
+2. Integrations break when internal systems or third-party apps change their APIs or user interfaces.
+3. Operational knowledge gets embedded in scripts and dashboards that are hard to debug or update later.
+4. The people closest to the work usually cannot fix the tools themselves, so IT and technical operations teams become bottlenecks.
 
-This product is designed around three main requirements:
+## Opportunity
 
-1. Frictionless Integration  
-   1. With company’s Authentication and Authorization systems  
-   2. With other Apps and Data  
-2. Easy to Use / Frictionless Adoption  
-   1. Target audience is the full spectrum of staff; technical and non-technical  
-   2. HR, Project managers, Finance, Sales, Business Development, Executives, Executive Assistants, non-programmer technical staff as well as programmers (software-engineers, IT, data analyst, security analyst)  
-3. Enterprise Grade Security
+AI agents create an opportunity to replace brittle internal tooling with resilient agentic workflows.
 
-### **Main features:**
+Agentic workflows are easier to author than traditional software because they can be described in natural language. Non-technical staff can define or adjust them without learning to program. Agents can also interact with applications through human interfaces, which makes many workflows less dependent on brittle APIs. When an interface changes, an agent may be able to recover. If it cannot, the workflow can often be fixed by editing natural-language instructions instead of code.
 
-1. Enterprise Integration  
-   1. Self-Serve integration via local **Web Browser**
-      1. App runs on laptop / desktop
-      1. The user logs into sites they have access to
-      3. **Zero integration steps**
-         1. Instant SSO integration  
-         2. Instant secure integration into data
-         3. **Enables Bottom Up / Product Led Adoption**: Employees and CXOs try it in their personal lives and recommend it to the office.
-      5. **Think of it as Cursor for non-technical work** (Or like Comet) 
-      6. Equally useful to run workflows outside the enterprise
-      3. Agnostic to API (or UI) changes
-      5. Two versions. Centrally stored user workflows and settings for the Enterprise version.
-         1. Enterprise Version:
-            1. User logs into the app using their SSO credentials
-            1. User's workflows, settings and runs are all stored in a central IT controlled DB. These can be inspected later for security and compliance
-         2. Personal Version:
-            1. All workflows and user settings are stored locally on the laptop and the user doesn't need to log into the app. This would be free and the hook for bottom-up adoption.
-            2. **Note:** The PoC only implements this version.
-   3. MCP Servers: The MCP ecosystem connects thousands of SaaS apps. securely to the Enterprise. The strategy is to integrate with thirdparty MCP servers that the Company either already has integrated with or is willing to do so. Per-user OAuth (e.g. for Google Workspace) is handled by the Agent Platform: tokens are stored centrally in IT-controlled infra and injected into MCP calls, so the user's identity (not a shared service account) drives every action and shows up correctly in upstream audit logs.
-2. Ease of Use  
-   1. Workflows in Natural Language instead of programs. These are the central unit of work.
-   3. Agent "IDE": Monitors and helps the user develop natural language programs
-   2. Agentic Scaffolding of workflows at runtime helps them run reliably
-3. Enterprise Grade Security:
-   1. The Agent Platform inherits the Company's security perimeter since users authenticate with the Company's SSO. Secure connection between MCP-Clients and MCP-Servers is a solved problem.
-   2. Auth, audit, HITL, rate limiting and per-workflow scope policy are enforced by the platform, but configured and enforced by Company IT.
-   3. Builtin Firewall  (Potential Future Features)
-      1. Inspect prompts for compliance  
-         1. Inspect chat context for prompt injection  
-      2. LLM output for content compliance  
-      3. Inspect tool calls  
-      4. etc.
+This matters because every application already has a UI. In principle, any digital process that a human can perform manually can become automatable without waiting for a bespoke integration. When an agent uses an API through an MCP server, it can still apply reasoning and recovery behavior around failures instead of treating every error as a hard stop.
 
-### **Workflow**
+## Product Overview
 
-A workflow is the central unit of computation. The user defines a workflow and the platform runs it.
+The **Enterprise Agent Platform** securely hosts a company's agentic workflows. Agents running on the platform are treated like any other enterprise software: they must follow the company's security, privacy, audit, and compliance policies.
 
-* A Workflow Contains  
-  * Prompts (system and user):  
-    * User develops these prompts  
-    * Mention internal or external websites to visit as natural part of instructions
-  * Tools available to use (via. MCP): User selects from available tools.  
-  * Agent Runtime (see below)  
-  * Uploaded Files
-* A prompt builder helps user build a good prompt  
-  * A “prompt compiler” rewrites a user’s prompt into detailed step-by-step instructions suitable for an agent  
-* Run on demand or automatically  
-  * Chat threads are viewable and interruptible
-  * Chat threads are resumable  
-* Agent Runtime: Defines how a workflow runs, including single-pass execution, tool-calling loops, multiple cooperating agents, and related patterns like Memory.
-   The simplest Runtime Algorithm is “Single-Turn + Multiple Toolcalls”. There is only one agent. The workflow stops after the LLM returns a response that’s not a toolcall. Usually the LLM will call multiple tools (e.g. navigate webpages, search the web etc.) and finish its task before it generates a response. This works in a lot of use-cases. There are more complex Runtime Algorithms consisting of multiple cooperating agents with specific roles. For e.g. there could be a main orchestrator, a planner, a verifier and a summarizer implementing the ReAct pattern. Then there could be Runtime Algorithms implementing specific algorithms such as Montecarlo Tree Search (MCTS). Some Runtime Algorithms may store and retrieve memory and learnt skills. These will be maintained by Agent Platform team.
-* Workflows are stored in a central database against the username.
+The platform must integrate with:
 
-### **Competition**
+1. Authentication, authorization, and access control systems.
+2. Enterprise security monitoring.
+3. Internal and third-party applications.
+4. Company-approved MCP servers and related integration infrastructure.
 
-Though I haven’t conducted an exhaustive review of competition, one can expect a fair amount of competition in this area. Claude Cowork, Hermes, OpenClaw, Perplexity / Comet, Cursor and several other Agent Harness products come to mind. So far, these products demand a high level of technical skillset on part of the end-user. Therefore our product strategy will have to focus on expanding the target user base by making the product extremely easy to install, use, integrate and secure - the iPhone of agent apps. This sentiment raised ideas like local-browser based integration, the workflow builder & compiler concept and inbuilt-firewall and autobuilding workflow GUI.
+The product should make integration and adoption as frictionless as possible. That is essential for both enterprise rollout and bottom-up adoption.
 
+## Core Requirements
 
-#### **Unresolved Issues**
-1. Headless deployment for the enterprise (but this may not be necessary)  
-2. Browser Integration:
-   1. Clunky: A separate copy of Chrome browser needs to be started in develper mode (make chrome-debug). This is a clunky user experience and needs to be fixed.
-   3. Unstable: The Google Chrome CDP (Chrome Dev Tools) API is unstable because Google can change or take away the functionality at any time. A more reliable solution is neeed. Cloudflare's Browser Run MCP is an option but does not fully replace the rich and secure integration exposed by Chrome Deve Tools (CDP). Bundling a browser along with the app like Perplexity and Cursor do is a possible solution.
-   4. Works reliably for only reading. For writing / editing, "Computer Use" tool is needed, which is expensive, slow and unreliable.
-3. MCP Integration can be Brittle:
-   Integration via. thirdparty MCP servers such as Zapier and Cloudflare may appear like a solved problem, however, since they are brittle since they depend on traditional software APIs
+1. **Frictionless integration**
+   - Integrate with company authentication and authorization.
+   - Integrate with apps and data through the browser, MCP servers, and other approved channels.
+
+2. **Ease of use**
+   - Support technical and non-technical users.
+   - Let users define workflows in natural language instead of code.
+   - Help users build, test, monitor, and improve workflows.
+
+3. **Enterprise-grade security**
+   - Preserve company security boundaries.
+   - Provide auditability, policy enforcement, human-in-the-loop controls, rate limiting, and scope management.
+
+## Main Features
+
+### Enterprise Integration
+
+#### Local Browser Integration
+
+The first adoption path is self-serve integration through a local web browser.
+
+The app runs on a laptop or desktop. The user signs in to the sites they already have access to, and agents interact with those sites through the browser. This provides:
+
+1. Instant SSO integration.
+2. Instant access to data the user can already see.
+3. Minimal setup for many workflows.
+4. A bottom-up, product-led adoption path where employees can try useful workflows before a centralized rollout.
+
+The product can be thought of as an evolution of Cursor for non-technical work or an evolution of Comet + Perplexity: a natural-language environment where users can create and run useful workflows without writing software.
+
+This browser-first path is also useful outside the enterprise, which supports a personal version of the product.
+
+#### Enterprise and Personal Versions
+
+The platform can support two deployment models:
+
+1. **Enterprise version**
+   - Users sign in with company SSO.
+   - Workflows, settings, and runs are stored in a central IT-controlled database.
+   - Runs and workflow definitions can be inspected for security and compliance.
+
+2. **Personal version**
+   - Workflows and settings are stored locally on the user's laptop.
+   - The user does not need to sign in to the platform itself.
+   - This version can be free and can drive bottom-up adoption.
+
+**PoC note:** The current PoC implements the personal version.
+
+#### MCP Server Integration
+
+The MCP ecosystem can connect the platform to thousands of SaaS applications. The enterprise strategy is to integrate with third-party MCP servers that the company already trusts or is willing to approve. The Platform will implement standard authentication protocols like OAuth. Auth tokens are stored in IT-controlled infrastructure and injected into MCP calls, so upstream audit logs reflect the actual user's identity rather than a shared service account.
+
+### Ease of Use
+
+The core unit of work is a **workflow**: a natural-language program that the platform can run.
+
+The product should include:
+
+1. Natural-language workflow authoring.
+2. An agent "IDE" that helps users develop, test, and debug workflows.
+3. Runtime scaffolding that makes workflows more reliable. E.g., Dynamically rendering a GUI for the workflow.
+4. Prompt-building support, including a prompt compiler that rewrites rough instructions into detailed agent-ready prompts.
+
+### Enterprise Security
+
+The Agent Platform inherits the company's security perimeter because users authenticate with company SSO. Secure connections between MCP clients and MCP servers are already a solved part of the ecosystem, but the platform must still provide a governance layer around agent execution.
+
+The platform should enforce or support:
+
+1. Authentication and authorization.
+2. Audit logs.
+3. Human-in-the-loop approval.
+4. Rate limits.
+5. Per-workflow tool and data scopes.
+6. Company IT configuration and oversight.
+
+Potential future firewall features:
+
+1. Prompt compliance checks.
+2. Prompt-injection inspection for chat context.
+3. LLM output compliance checks.
+4. Tool-call inspection and policy enforcement.
+
+## Workflow Model
+
+A workflow is the central unit of computation. The user defines a workflow, and the platform runs it.
+
+A workflow contains:
+
+1. **Prompts**
+   - System and user prompts.
+   - Natural-language instructions written by the user.
+   - References to internal or external websites when needed.
+
+2. **Tools**
+   - Built-in tools such as browser access, local file reads, web fetches, and search.
+   - MCP tools selected by the user or approved by the organization.
+
+3. **Agent Runtime**
+   - The execution environment that runs the workflow and the specific algorithm used by the Agent Runtime, such as Single Turn, ReAct, planner/executor, multi-agent review, or MCTS.
+
+Workflows can run on demand or automatically. Runs should produce chat threads that are viewable, interruptible, and resumable.
+
+Workflows and runs are stored in a central database in the enterprise version and locally in the personal version.
+
+## Agent Runtime
+
+The Agent Runtime defines how a workflow runs, including single-pass execution, tool-calling loops, multi-agent coordination, memory, and skill reuse.
+
+The simplest Runtime Algorithm is **Single-Turn + Multiple Toolcalls**. There is only one agent. The workflow stops when the LLM returns a response that is not a tool call. During the run, the LLM may call tools such as browser navigation, web search, file reads, or MCP actions.
+
+More advanced Runtime Algorithms may include:
+
+1. ReAct-style reasoning and acting loops.
+2. Planner/executor flows.
+3. Multi-agent review workflows with orchestrators, planners, verifiers, and summarizers.
+4. Monte Carlo Tree Search (MCTS) or LATS-style exploration.
+5. Runtime memory and learned skills.
+
+Runtime Algorithms are maintained by the Agent Platform team.
+
+## Competition
+
+This market is likely to become competitive. Products and categories to watch include Claude Cowork, Hermes, OpenClaw, Perplexity/Comet, Cursor, and other agent harness products.
+
+Many current products still require a high level of technical skill from the user. The Agent Platform should differentiate by expanding the target user base: it must be easy to install, use, integrate, and secure. The goal is to become the "iPhone for agentic apps".
+
+This strategy motivates several product ideas:
+
+1. Local-browser integration.
+2. Workflow builder and prompt compiler.
+3. Built-in firewall and policy enforcement.
+4. Auto-generated workflow GUIs.
+
+## Unresolved Issues
+
+1. **Enterprise headless deployment**
+   - Headless deployment may be needed for enterprise environments, but it is not yet clear whether it is required for the first product version.
+
+2. **Browser integration UX**
+   - The current PoC requires a separate Chrome instance started in developer mode with `make chrome-debug`.
+   - This is clunky and should be improved.
+
+3. **Browser integration stability**
+   - Chrome DevTools Protocol (CDP) can change over time.
+   - Cloudflare Browser Rendering MCP may help, but it does not fully replace the rich local browser integration exposed through CDP.
+   - Bundling a browser, as Perplexity and Cursor do, may be a better long-term option.
+
+4. **Browser writes and computer use**
+   - Browser access is reliable enough for reading in many cases.
+   - Writing or editing through a UI requires a computer-use tool, which is slower, more expensive, and less reliable.
+
+5. **MCP brittleness**
+   - Third-party MCP servers such as Zapier and Cloudflare may look like a solved integration layer, but many still depend on traditional software APIs.
+   - If those underlying APIs break or change, MCP integrations can still fail.
