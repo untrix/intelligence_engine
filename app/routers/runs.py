@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
@@ -10,7 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.main import get_templates
 from app.models import WorkflowRun, WorkflowRunMessage
+from app.services.run_display import run_result_content
+from app.services.run_fix_analyzer import analyze_run
 from app.services.workflow_runner import delete_workflow_run, resume_workflow_run
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -61,6 +67,29 @@ async def run_detail(
             "active_page": "runs",
             "run": run,
             "messages": messages,
+            "result": run_result_content(run, messages),
+        },
+    )
+
+
+@router.get("/{run_id:int}/result", response_class=HTMLResponse)
+async def run_result(
+    request: Request,
+    run_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """HTMX partial returning the formatted run result."""
+    templates = get_templates()
+    run = await db.get(WorkflowRun, run_id)
+    if not run:
+        return HTMLResponse("", status_code=404)
+    messages = await _messages_for_run(db, run_id)
+    return templates.TemplateResponse(
+        request,
+        "runs/_result.html",
+        {
+            "run": run,
+            "result": run_result_content(run, messages),
         },
     )
 
@@ -85,6 +114,45 @@ async def run_messages(
             "messages": messages,
         },
     )
+
+
+@router.post("/{run_id:int}/fix", response_class=HTMLResponse)
+async def fix_run(
+    request: Request,
+    run_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Analyze a finished run and return fix / prompt improvement suggestions."""
+    templates = get_templates()
+    run = await db.get(WorkflowRun, run_id)
+    if not run:
+        return HTMLResponse("<div class='alert alert-warning'>Run not found.</div>", status_code=404)
+    if run.status == "running":
+        return HTMLResponse(
+            "<div class='alert alert-warning'>"
+            "Analysis is only available after the run has finished."
+            "</div>",
+            status_code=400,
+        )
+
+    try:
+        analysis = await analyze_run(run_id)
+        return templates.TemplateResponse(
+            request,
+            "runs/_fix_analysis.html",
+            {"analysis": analysis, "error": ""},
+        )
+    except Exception as exc:
+        logger.exception("Run fix analysis failed for run %s", run_id)
+        return templates.TemplateResponse(
+            request,
+            "runs/_fix_analysis.html",
+            {
+                "analysis": "",
+                "error": str(exc),
+            },
+            status_code=500,
+        )
 
 
 @router.post("/{run_id:int}/resume")

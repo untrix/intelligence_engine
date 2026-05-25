@@ -27,6 +27,7 @@ class WorkflowDefinition(Base):
     __tablename__ = "workflow_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    seed_slug = Column(String(64), unique=True, nullable=True)
     name = Column(String(255), nullable=False)
     playbook_name = Column(String(255), nullable=False, default="Single Turn")
     user_prompt_template = Column(Text, nullable=False)

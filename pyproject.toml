@@ -40,6 +40,9 @@ dependencies = [
     # --- Prompt rendering ---
     "chevron",
 
+    # --- MCP client (Zapier and other remote servers) ---
+    "mcp",
+
     # --- Packaging / dependency management ---
     "uv",
 ]

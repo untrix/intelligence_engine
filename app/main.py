@@ -11,6 +11,7 @@ from pathlib import Path
 
 import markdown
 from fastapi import FastAPI, Request
+from markupsafe import Markup
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
 
     await mark_stale_running_runs()
     await _seed_defaults()
+    await _seed_sample_workflows()
     yield
 
 
@@ -58,13 +60,15 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
-def _render_markdown(text: str | None) -> str:
+def _render_markdown(text: str | None) -> Markup:
     if not text:
-        return ""
-    return markdown.markdown(
-        text,
-        extensions=["extra", "nl2br", "sane_lists"],
-        output_format="html",
+        return Markup("")
+    return Markup(
+        markdown.markdown(
+            text,
+            extensions=["extra", "nl2br", "sane_lists"],
+            output_format="html",
+        )
     )
 
 
@@ -99,10 +103,10 @@ async def _seed_defaults():
         "google_api_key": "",
         "aws_profile": "",
         "aws_region": "us-east-1",
-        "chrome_profile_path": "",
-        "chrome_profile_name": "Default",
         "chrome_cdp_url": "http://127.0.0.1:9222",
-        "chrome_headed": "false",
+        "zapier_mcp_enabled": "false",
+        "zapier_mcp_server_url": "",
+        "zapier_mcp_api_token": "",
     }
     async with async_session() as session:
         for key, value in defaults.items():
@@ -112,6 +116,16 @@ async def _seed_defaults():
             if not result.scalar_one_or_none():
                 session.add(AppSettings(key=key, value=value))
         await session.commit()
+
+
+async def _seed_sample_workflows():
+    from app.database import async_session
+    from app.seed.sample_workflows import ensure_sample_workflows
+
+    async with async_session() as session:
+        installed = await ensure_sample_workflows(session)
+        if installed:
+            logger.info("Installed sample workflows: %s", ", ".join(installed))
 
 
 if __name__ == "__main__":

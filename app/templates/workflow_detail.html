@@ -8,6 +8,9 @@
         <div>
             <h1 class="h3 mb-1">
                 <i class="bi bi-diagram-3 me-2"></i>{{ workflow.name }}
+                {% if is_sample %}
+                <span class="badge text-bg-info align-middle">Sample</span>
+                {% endif %}
             </h1>
             <div class="text-muted small">Workflow #{{ workflow.id }}</div>
         </div>
@@ -20,6 +23,37 @@
             </a>
         </div>
     </div>
+
+    {% if quick_start %}
+    <div class="alert alert-info mb-4">
+        <button
+            class="btn btn-link p-0 text-info text-decoration-none fw-semibold"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#workflowQuickStart"
+            aria-expanded="false"
+            aria-controls="workflowQuickStart"
+        >
+            <i class="bi bi-lightning-charge me-1"></i>Quick start
+        </button>
+        <div class="collapse mt-2" id="workflowQuickStart">
+            <p class="mb-2 small">
+                Use these values when you run this workflow. Paths resolve against the app home directory
+                (project root by default; see Settings / <code>INTELLIGENCE_ENGINE_HOME_DIR</code>).
+            </p>
+            <table class="table table-sm table-borderless mb-0 small">
+                <tbody>
+                    {% for variable, value in quick_start.items() %}
+                    <tr>
+                        <th scope="row" class="text-nowrap pe-3"><code>{{ variable }}</code></th>
+                        <td><code>{{ value }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="card shadow-sm">
         <div class="card-body">

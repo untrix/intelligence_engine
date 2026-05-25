@@ -1,9 +1,12 @@
 """
 Playwright-based browser service for rendering JS-heavy and authenticated pages.
 
-Copies essential Chrome profile files (cookies, local storage, etc.) to a
-temporary directory so Playwright never locks the real Chrome profile.  The
-user can keep Chrome open while agent workflows run.
+Production path: attach to Chrome via remote debugging (CDP) — see Settings and
+``make chrome-debug``.
+
+Copied-profile helpers below (_copy_profile_to_temp, _launch_persistent_copy) are
+intentionally retained but not wired from Settings or workflow runs; they may be
+re-enabled later. Do not fall back to them when CDP is unset or fails.
 """
 
 import logging
@@ -19,6 +22,8 @@ logger = logging.getLogger(__name__)
 MAX_TEXT_LENGTH = 80_000
 MAX_LINKS = 200
 BROWSER_TEMP_PREFIX = "intelligence-engine-browser-"
+
+# --- Copied-profile mode (retained, not used from Settings / workflow runs) ---
 
 _PROFILE_ESSENTIALS = [
     "Cookies",
@@ -46,7 +51,7 @@ def _copy_profile_to_temp(
     chrome_profile_path: str,
     chrome_profile_name: str = "Default",
 ) -> str:
-    """Copy only the auth-essential files from a Chrome profile to a temp dir."""
+    """Copied-profile mode (unused at runtime): copy auth-essential files to a temp dir."""
     tmp = tempfile.mkdtemp(prefix=BROWSER_TEMP_PREFIX)
 
     local_state = os.path.join(chrome_profile_path, "Local State")
@@ -91,19 +96,13 @@ def _copy_profile_to_temp(
     return tmp
 
 
-def _parse_bool_setting(value: str | None, default: bool = False) -> bool:
-    if value is None:
-        return default
-    return str(value).strip().lower() in ("1", "true", "yes", "on")
-
-
 async def _launch_persistent_copy(
     chrome_profile_path: str,
     chrome_profile_name: str,
     *,
     headless: bool,
 ) -> tuple[object, object, str, bool]:
-    """Launch Playwright against a temp copy of profile files."""
+    """Copied-profile mode (unused at runtime): launch Playwright against a temp profile copy."""
     from playwright.async_api import async_playwright
 
     tmp_dir = _copy_profile_to_temp(chrome_profile_path, chrome_profile_name)
@@ -172,7 +171,7 @@ async def create_browser_context(
     *,
     headless: bool = True,
 ):
-    """Backward-compatible wrapper: launch from a copied profile only."""
+    """Copied-profile mode (unused at runtime): backward-compatible launch helper."""
     pw, ctx, tmp, _is_cdp = await _launch_persistent_copy(
         chrome_profile_path, chrome_profile_name, headless=headless
     )
@@ -182,29 +181,10 @@ async def create_browser_context(
 async def create_browser_session_from_settings(settings: dict) -> tuple[
     object | None, object | None, str | None, bool
 ]:
-    """Build a Playwright session from app Settings."""
-    import platform
-
+    """Build a Playwright session from Settings (CDP URL only)."""
     cdp_url = (settings.get("chrome_cdp_url") or "").strip()
-    chrome_path = (settings.get("chrome_profile_path") or "").strip()
-    chrome_name = (settings.get("chrome_profile_name") or "Default").strip() or "Default"
-    headed = _parse_bool_setting(settings.get("chrome_headed"), default=False)
-
     if cdp_url:
         return await _connect_cdp(cdp_url)
-
-    if chrome_path:
-        if platform.system() == "Darwin":
-            logger.warning(
-                "macOS: browsing uses a *copy* of your Chrome profile files. "
-                "Encrypted cookies often stay tied to Keychain + the original path, "
-                "so LinkedIn and similar sites may look signed out. "
-                "Set a Chrome remote debugging URL in Settings to use your live session."
-            )
-        return await _launch_persistent_copy(
-            chrome_path, chrome_name, headless=not headed
-        )
-
     return None, None, None, False
 
 

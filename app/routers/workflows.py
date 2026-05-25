@@ -12,8 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.main import get_templates
 from app.models import WorkflowDefinition
+from app.seed.sample_workflows import (
+    ensure_sample_workflows,
+    get_sample_manifest,
+    missing_sample_slugs,
+)
 from app.routers.playbooks import PLAYBOOK_NAMES
 from app.services.ai.tools import TOOL_DEFINITIONS
+from app.services.mcp import AGENTIC_TOOL_NAMES, zapier_mcp_configured
+from app.services.mcp.zapier import is_zapier_mcp_tool
 from app.services.workflow_prompts import extract_user_prompt_variables
 from app.services.workflow_runner import (
     create_and_start_workflow_run,
@@ -33,14 +40,49 @@ def _normalize_playbook_name(playbook_name: str | None) -> str:
     return PLAYBOOK_NAMES[0]
 
 
+def _all_selectable_tool_names() -> list[str]:
+    return _tool_names() + list(AGENTIC_TOOL_NAMES)
+
+
 def _clean_allowed_tools(allowed_tools: list[str]) -> list[str]:
-    available_tools = _tool_names()
-    return [tool for tool in allowed_tools if tool in available_tools]
+    available = set(_all_selectable_tool_names())
+    return [tool for tool in allowed_tools if tool in available]
 
 
-def _workflow_form_context(
+def _sort_workflows(rows: list[WorkflowDefinition]) -> list[WorkflowDefinition]:
+    def by_created_desc(workflow: WorkflowDefinition) -> float:
+        if workflow.created_at is None:
+            return 0.0
+        return -workflow.created_at.timestamp()
+
+    samples = sorted(
+        [w for w in rows if w.seed_slug],
+        key=by_created_desc,
+    )
+    user_rows = sorted(
+        [w for w in rows if not w.seed_slug],
+        key=by_created_desc,
+    )
+    return samples + user_rows
+
+
+def _workflow_list_item(workflow: WorkflowDefinition) -> dict:
+    manifest = (
+        get_sample_manifest(workflow.seed_slug) if workflow.seed_slug else None
+    )
+    return {
+        "workflow": workflow,
+        "variables": json.loads(workflow.user_prompt_variables_json or "[]"),
+        "tools": json.loads(workflow.allowed_tools_json or "[]"),
+        "is_sample": bool(workflow.seed_slug),
+        "variable_defaults": manifest.variable_defaults if manifest else {},
+    }
+
+
+async def _workflow_form_context(
     *,
     request: Request,
+    db: AsyncSession,
     title: str,
     form_action: str,
     workflow_name: str,
@@ -49,6 +91,10 @@ def _workflow_form_context(
     selected_tools: list[str],
     error: str = "",
 ) -> dict:
+    from app.routers.settings import get_all_settings
+
+    all_settings = await get_all_settings(db)
+    zapier_ok = zapier_mcp_configured(all_settings)
     return {
         "active_page": "workflows",
         "title": title,
@@ -57,6 +103,8 @@ def _workflow_form_context(
         "playbook_names": PLAYBOOK_NAMES,
         "selected_playbook": selected_playbook,
         "available_tools": _tool_names(),
+        "zapier_tools": list(AGENTIC_TOOL_NAMES),
+        "zapier_mcp_configured": zapier_ok,
         "selected_tools": selected_tools,
         "user_prompt_template": user_prompt_template,
         "error": error,
@@ -64,49 +112,60 @@ def _workflow_form_context(
 
 
 @router.get("/workflows", response_class=HTMLResponse)
-async def workflows(request: Request, db: AsyncSession = Depends(get_db)):
+async def workflows(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    seeded: str | None = None,
+):
     """Render the list of workflow definitions."""
     templates = get_templates()
-    result = await db.execute(
-        select(WorkflowDefinition).order_by(WorkflowDefinition.created_at.desc())
-    )
-    workflow_rows = result.scalars().all()
-    workflows_with_variables = [
-        {
-            "workflow": workflow,
-            "variables": json.loads(workflow.user_prompt_variables_json or "[]"),
-            "tools": json.loads(workflow.allowed_tools_json or "[]"),
-        }
-        for workflow in workflow_rows
-    ]
+    result = await db.execute(select(WorkflowDefinition))
+    workflow_rows = _sort_workflows(list(result.scalars().all()))
+    existing_slugs = {w.seed_slug for w in workflow_rows if w.seed_slug}
+    workflows_with_variables = [_workflow_list_item(w) for w in workflow_rows]
     return templates.TemplateResponse(
         request,
         "workflows.html",
         {
             "active_page": "workflows",
             "workflows": workflows_with_variables,
+            "missing_sample_slugs": missing_sample_slugs(existing_slugs),
+            "show_seeded_notice": seeded == "1",
         },
     )
 
 
+@router.post("/workflows/seed-samples")
+async def seed_sample_workflows(db: AsyncSession = Depends(get_db)):
+    """Install bundled sample workflows that are not already present."""
+    await ensure_sample_workflows(db)
+    return RedirectResponse("/workflows?seeded=1", status_code=303)
+
+
 async def _workflow_detail_context(workflow: WorkflowDefinition) -> dict:
+    manifest = (
+        get_sample_manifest(workflow.seed_slug) if workflow.seed_slug else None
+    )
     return {
         "active_page": "workflows",
         "workflow": workflow,
         "variables": json.loads(workflow.user_prompt_variables_json or "[]"),
         "tools": json.loads(workflow.allowed_tools_json or "[]"),
+        "is_sample": bool(workflow.seed_slug),
+        "quick_start": manifest.variable_defaults if manifest else None,
     }
 
 
 @router.get("/workflows/new", response_class=HTMLResponse)
-async def new_workflow(request: Request):
+async def new_workflow(request: Request, db: AsyncSession = Depends(get_db)):
     """Render the new workflow form."""
     templates = get_templates()
     return templates.TemplateResponse(
         request,
         "workflow_form.html",
-        _workflow_form_context(
+        await _workflow_form_context(
             request=request,
+            db=db,
             title="New Workflow",
             form_action="/workflows",
             workflow_name="",
@@ -143,8 +202,9 @@ async def create_workflow(
         return templates.TemplateResponse(
             request,
             "workflow_form.html",
-            _workflow_form_context(
+            await _workflow_form_context(
                 request=request,
+                db=db,
                 title="New Workflow",
                 form_action="/workflows",
                 workflow_name=name,
@@ -231,8 +291,9 @@ async def edit_workflow(
     return templates.TemplateResponse(
         request,
         "workflow_form.html",
-        _workflow_form_context(
+        await _workflow_form_context(
             request=request,
+            db=db,
             title=f"Edit {workflow.name}",
             form_action=f"/workflows/{workflow.id}",
             workflow_name=workflow.name,
@@ -274,8 +335,9 @@ async def update_workflow(
         return templates.TemplateResponse(
             request,
             "workflow_form.html",
-            _workflow_form_context(
+            await _workflow_form_context(
                 request=request,
+                db=db,
                 title=f"Edit {workflow.name}",
                 form_action=f"/workflows/{workflow.id}",
                 workflow_name=name,

@@ -1,0 +1,39 @@
+{
+  "seed_slug": "submit_candidate_review",
+  "name": "Submit Candidate Review (Needs MCP Key)",
+  "playbook_name": "Single Turn",
+  "variables": [
+    "job_files",
+    "candidate_files",
+    "candidate_name"
+  ],
+  "allowed_tools": [
+    "fetch_url",
+    "browse_page",
+    "list_local_folder",
+    "read_local_folder",
+    "read_local_path",
+    "read_local_file",
+    "web_search",
+    "list_enabled_zapier_actions",
+    "discover_zapier_actions",
+    "enable_zapier_action",
+    "disable_zapier_action",
+    "auto_provision_mcp",
+    "execute_zapier_read_action",
+    "execute_zapier_write_action",
+    "get_configuration_url",
+    "list_zapier_skills",
+    "get_zapier_skill",
+    "create_zapier_skill",
+    "update_zapier_skill",
+    "delete_zapier_skill",
+    "send_feedback"
+  ],
+  "variable_defaults": {
+    "candidate_name": "Youshua Bengio",
+    "job_files": "./docs/Mock Data/Job Files",
+    "candidate_files": "./docs/Mock Data/Yoshua Bengio"
+  },
+  "user_prompt_template": "You are a seasoned Deep Machine Learning scientist tasked with reviewing Senior ML Scientist candidates. You have tools to fetch files (fetch_url), browse web pages with JavaScript and authentication (browse_page), list and read local folders (list_local_folder, read_local_folder, read_local_path), and read individual local files (read_local_file). For {{job_files}} and {{candidate_files}}, treat them as folder paths: use read_local_folder or read_local_path to read all supported documents in each folder. Use read_local_file only when you know the path is a single file. Use browse_page for LinkedIn, Google Scholar, GitHub profiles, SmartRecruiters, and similar sites. Use fetch_url for direct file links and PDFs. Follow relevant links you discover to gather comprehensive information.\r\nYou are also an expert interviewer evaluating a candidate. Comment on a candidate's suitability for a \"Sr. Machine Learning Scientist - Applied Research\" position.\r\n\r\nUse the tools available as appropriate for reading local files, fetching files from the internet, performing web search and using a browser to navigate authenticated and JavaScript heavy sites.\r\n\r\nThe candidate you are evaluating is: {{candidate_name}}\r\n\r\nThe job description, interview template, a questionnaire and any other job related files are located at:\r\n{{job_files}}\r\n\r\nThe candidate's resume, questionnaire answers and any other candidate related files are located at:\r\n{{candidate_files}}\r\n\r\nMore information regarding the candidate may be found by scanning the following Google spreadsheet: \r\nhttps://docs.google.com/spreadsheets/d/1xE4l_K_O01iVkp_N1pLkc0IByKdlHlr_BRnhN_csuKo/edit?usp=sharing\r\n\r\nPlease use the appropriate tools to fetch and read ALL of the above files\r\n(both job files and candidate files). Use browse_page for web profiles\r\nand authenticated sites like LinkedIn, Google Scholar, GitHub, Google Docs, Google Drive and Smart Recruiters; use fetch_url for direct file links and PDFs.\r\n\r\nBe sure the review the Job Description, the Interview Template as well as the Questionnaire, in order to get a good idea of what the job requires. Remember that this is a Deep Learning Applied Researcher / Scientist role, not a ML Engineer or Software Engineer or Data Scientist role.\r\n\r\nNext, go through the candidate's resume, their response to the Questionnaire and any other provided information regarding them. If they have provided their LinkedIn profile then be sure to scan it as well (using the browse_page tool). If they list their publications or provide their Google Scholar link, then please be sure to read through all of their publications / papers and assess the quality of relevant publications. Ignore the irrelevant publications (but do mention when you do so). Also assess the quality of the publication venues (conferences, journals and workshops). If they provide links to open source repositories or a link to their GitHub profile the please do go through their code and assess it's quality and relevance. Give very little importance to LLM and Agentic applications experience. That's nice to have but the primary requirement is that they must be very strong in Deep Learning theory and R&D.\r\n\r\nAfter reviewing all materials, present your analyses and also comment on whether this candidate should be interviewed and if so, whether you have any advice for the interviewers.\r\n\r\nGrade the candidate on a scale of 0 to 10, with 0 being lowest (no match, do not interview) and 10 being the highest (exceptional candidate, do interview immediately). Provide a detailed reasoning for your score. For the score, respond in JSON format: {\"score\": <number>}.\r\n\r\nFinally, paste your review in the \"AI Evaluation\" column on \"Sheet 1\" of the above Google Sheet: https://docs.google.com/spreadsheets/d/1xE4l_K_O01iVkp_N1pLkc0IByKdlHlr_BRnhN_csuKo/edit?usp=sharing . Use Zapier MCP tools for this purpose."
+}

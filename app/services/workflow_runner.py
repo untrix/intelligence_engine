@@ -20,6 +20,12 @@ from app.models import (
 from app.services.ai.registry import get_provider
 from app.services.ai.tools import TOOL_DEFINITIONS, create_tool_executor
 from app.services.browser import close_browser_context, create_browser_session_from_settings
+from app.services.mcp import (
+    ZapierMcpSession,
+    get_zapier_mcp_settings,
+    is_zapier_mcp_tool,
+    zapier_mcp_configured,
+)
 from app.services.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
@@ -253,6 +259,14 @@ async def _run_workflow(run_id: int) -> None:
         ]
         allowed_tools = json.loads(workflow.allowed_tools_json or "[]")
 
+    builtin_allowed = [t for t in allowed_tools if not is_zapier_mcp_tool(t)]
+    zapier_allowed = [t for t in allowed_tools if is_zapier_mcp_tool(t)]
+    zapier_cfg = get_zapier_mcp_settings(settings)
+    use_zapier = (
+        zapier_allowed
+        and zapier_mcp_configured(settings)
+    )
+
     sequence_counter = [len(messages)]
 
     async def on_message(msg: dict) -> None:
@@ -264,9 +278,8 @@ async def _run_workflow(run_id: int) -> None:
     browser_tmp_dir = None
     browser_is_cdp = False
     cdp_url = (settings.get("chrome_cdp_url") or "").strip()
-    chrome_path = (settings.get("chrome_profile_path") or "").strip()
 
-    if cdp_url or chrome_path:
+    if cdp_url:
         try:
             pw, browser_ctx, browser_tmp_dir, browser_is_cdp = (
                 await create_browser_session_from_settings(settings)
@@ -276,15 +289,39 @@ async def _run_workflow(run_id: int) -> None:
             pw, browser_ctx, browser_tmp_dir = None, None, None
             browser_is_cdp = False
 
-    try:
+    tool_definitions = _tool_definitions_for(builtin_allowed)
+
+    async def _run_provider(zapier_session: ZapierMcpSession | None) -> dict:
+        tools = tool_definitions
+        if zapier_session is not None:
+            tools = tools + zapier_session.openai_tools(set(zapier_allowed))
+            bootstrap = await zapier_session.fetch_enabled_actions_context()
+            if bootstrap:
+                for msg in messages:
+                    if msg.get("role") == "system":
+                        msg["content"] = (msg.get("content") or "").rstrip() + "\n\n" + bootstrap
+                        break
         provider = get_provider(run.provider, settings)
-        result = await provider.run_thread(
+        return await provider.run_thread(
             messages=messages,
             model=run.model,
-            tools=_tool_definitions_for(allowed_tools),
-            tool_executor=create_tool_executor(browser_context=browser_ctx),
+            tools=tools,
+            tool_executor=create_tool_executor(
+                browser_context=browser_ctx,
+                zapier_session=zapier_session,
+            ),
             on_message=on_message,
         )
+
+    try:
+        if use_zapier:
+            async with ZapierMcpSession(
+                zapier_cfg.server_url, zapier_cfg.api_token
+            ) as zapier_session:
+                result = await _run_provider(zapier_session)
+        else:
+            result = await _run_provider(None)
+
         async with async_session() as db:
             await db.execute(
                 update(WorkflowRun)

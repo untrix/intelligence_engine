@@ -1,0 +1,11 @@
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <strong>Analysis failed</strong>
+    <p class="mb-2 mt-2">{{ error }}</p>
+    <a href="/settings" class="alert-link">Check Settings</a> (API keys and default model).
+</div>
+{% else %}
+<div class="reasoning-md">
+    {{ analysis | markdown }}
+</div>
+{% endif %}

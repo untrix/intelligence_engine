@@ -74,6 +74,7 @@
                                     name="clear_key"
                                     value="openai"
                                     class="btn btn-outline-danger btn-sm"
+                                    onclick="clearApiKeyUI('openai')"
                                 >
                                     <i class="bi bi-x-lg me-1"></i>Clear
                                 </button>
@@ -144,6 +145,7 @@
                                     name="clear_key"
                                     value="anthropic"
                                     class="btn btn-outline-danger btn-sm"
+                                    onclick="clearApiKeyUI('anthropic')"
                                 >
                                     <i class="bi bi-x-lg me-1"></i>Clear
                                 </button>
@@ -214,6 +216,7 @@
                                     name="clear_key"
                                     value="google"
                                     class="btn btn-outline-danger btn-sm"
+                                    onclick="clearApiKeyUI('google')"
                                 >
                                     <i class="bi bi-x-lg me-1"></i>Clear
                                 </button>
@@ -335,19 +338,18 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header text-white" style="background-color: #198754;">
-                        <i class="bi bi-globe2 me-2"></i>Web Browsing (Chrome Profile)
+                        <i class="bi bi-globe2 me-2"></i>Web Browsing (Chrome CDP)
                     </div>
                     <div class="card-body">
                         <div class="form-text mb-3">
                             To let AI agents browse authenticated or JavaScript-heavy sites
                             (LinkedIn, SmartRecruiters, Google Scholar), connect Playwright to
-                            your real Chrome session (recommended on macOS) or point to your
-                            user data directory.
+                            a Chrome instance with remote debugging enabled.
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12">
                                 <label for="chrome_cdp_url" class="form-label">
-                                    Chrome remote debugging URL (recommended)
+                                    Chrome remote debugging URL
                                 </label>
                                 <input
                                     type="text"
@@ -365,61 +367,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-8">
-                                <label for="chrome_profile_path" class="form-label">Chrome User Data Directory</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="chrome_profile_path"
-                                    name="chrome_profile_path"
-                                    value="{{ settings.get('chrome_profile_path', '') }}"
-                                    placeholder="e.g. /Users/you/Library/Application Support/Google/Chrome"
-                                >
-                                <div class="form-text">
-                                    macOS: <code>~/Library/Application Support/Google/Chrome</code><br>
-                                    Linux: <code>~/.config/google-chrome</code>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label for="chrome_profile_name" class="form-label">Profile Name</label>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    id="chrome_profile_name"
-                                    name="chrome_profile_name"
-                                    value="{{ settings.get('chrome_profile_name', 'Default') }}"
-                                    placeholder="Default"
-                                >
-                                <div class="form-text">
-                                    Usually <code>Default</code> or <code>Profile 1</code>, etc.
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label for="chrome_headed" class="form-label">Copied profile mode</label>
-                                <select
-                                    class="form-select"
-                                    id="chrome_headed"
-                                    name="chrome_headed"
-                                >
-                                    <option value="false" {% if settings.get('chrome_headed', 'false') != 'true' %}selected{% endif %}>
-                                        Headless (background)
-                                    </option>
-                                    <option value="true" {% if settings.get('chrome_headed', 'false') == 'true' %}selected{% endif %}>
-                                        Visible Chrome window
-                                    </option>
-                                </select>
-                                <div class="form-text">
-                                    Applies when using user data path (not CDP). A visible window can reduce bot detection; LinkedIn often still needs CDP on macOS.
-                                </div>
-                            </div>
-                        </div>
                         <div class="alert alert-info mt-3 mb-0 small">
                             <i class="bi bi-info-circle me-1"></i>
-                            Without a debugging URL, a snapshot of profile files is copied to a
-                            temp folder when a review runs. On macOS, copied cookies may not
-                            decrypt, so you can look logged out on LinkedIn — use CDP above.
-                            Leave both CDP and user data path blank to disable <code>browse_page</code>.
+                            Leave the URL blank to disable <code>browse_page</code>.
+                            Sign in to sites once inside the agent Chrome window; sessions persist in
+                            <code>./data/chrome-debug</code>.
                         </div>
                         <div class="mt-3 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary btn-sm">
@@ -454,6 +406,87 @@ function togglePasswordVisibility(inputId, btn) {
         icon.classList.add('bi-eye');
     }
 }
+
+var apiKeyFieldConfig = {
+    openai: {
+        inputId: 'openai_api_key',
+        unchangedName: 'openai_api_key_unchanged',
+        placeholder: 'Enter your OpenAI API key',
+    },
+    anthropic: {
+        inputId: 'anthropic_api_key',
+        unchangedName: 'anthropic_api_key_unchanged',
+        placeholder: 'Enter your Anthropic API key',
+    },
+    google: {
+        inputId: 'google_api_key',
+        unchangedName: 'google_api_key_unchanged',
+        placeholder: 'Enter your Google API key',
+    },
+};
+
+function clearApiKeyUI(provider) {
+    var config = apiKeyFieldConfig[provider];
+    if (!config) return;
+
+    var input = document.getElementById(config.inputId);
+    if (!input) return;
+
+    input.value = '';
+    input.placeholder = config.placeholder;
+    input.type = 'password';
+
+    var inputGroup = input.closest('.input-group');
+    if (inputGroup) {
+        var toggleBtn = inputGroup.querySelector('button[aria-label="Toggle password visibility"]');
+        if (toggleBtn) {
+            var icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    }
+
+    var container = input.closest('.mb-0');
+    if (container) {
+        var badge = container.querySelector('.badge');
+        if (badge) badge.remove();
+        var unchanged = container.querySelector('input[name="' + config.unchangedName + '"]');
+        if (unchanged) unchanged.remove();
+    }
+
+    var cardBody = input.closest('.card-body');
+    if (cardBody) {
+        var clearBtn = cardBody.querySelector('button[name="clear_key"][value="' + provider + '"]');
+        if (clearBtn) {
+            clearBtn.classList.add('d-none');
+            clearBtn.disabled = true;
+        }
+    }
+}
+
+document.body.addEventListener('apiKeyCleared', function(event) {
+    if (event.detail && event.detail.provider) {
+        clearApiKeyUI(event.detail.provider);
+    }
+});
+
+document.body.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.successful && event.detail.xhr) {
+        var header = event.detail.xhr.getResponseHeader('HX-Trigger');
+        if (header) {
+            try {
+                var triggers = JSON.parse(header);
+                if (triggers.apiKeyCleared) {
+                    clearApiKeyUI(triggers.apiKeyCleared.provider);
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+    }
+});
 
 </script>
 {% endblock %}

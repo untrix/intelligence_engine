@@ -21,6 +21,31 @@ make dev
 
 Open http://localhost:8000 and configure API keys under **Settings**.
 
+## Quick start (sample workflows)
+
+On first startup the app installs bundled sample workflows (see [`app/seed/sample_workflows/`](app/seed/sample_workflows/)). Mock job and candidate files live under [`docs/Mock Data/`](docs/Mock%20Data/).
+
+1. Open **Workflows** — you should see **Job Candidate Review** and **Submit Candidate Review (Needs MCP Key)** with a **Sample** badge.
+2. Click **Run** on either workflow; sample runs pre-fill `candidate_name`, `job_files`, and `candidate_files` (defaults: `Jon Stewart`, `./docs/Mock Data/Job Files`, `./docs/Mock Data/Jon Stewart`).
+3. Open the run under **Runs** and watch the **Result** tab when the run finishes.
+
+**Job Candidate Review** uses local file and browser tools only. **Submit Candidate Review (Needs MCP Key)** also enables Zapier Agentic meta-tools to submit the review (e.g. to a spreadsheet) — configure Zapier on **Integrations** before running.
+
+Paths resolve against the project root by default (`INTELLIGENCE_ENGINE_HOME_DIR`). For LinkedIn, Google Sheets, and similar steps in the prompt, configure API keys in **Settings** and optionally run `make chrome-debug` for browser tools.
+
+If you delete a sample workflow, use **Install sample workflows** on the Workflows page to restore only what is missing (your edits to existing samples are kept).
+
+## Zapier MCP (optional)
+
+Connect Zapier’s **Agentic** MCP server to call 8,000+ apps via meta-tools (`discover_zapier_actions`, `execute_zapier_write_action`, etc.).
+
+1. Create a server and API token at [mcp.zapier.com](https://mcp.zapier.com).
+2. Open **Integrations** → **MCP Tools — Zapier**, paste the server URL and token, **Test connection**, then **Save**.
+3. Edit a workflow and enable **Zapier MCP (Agentic)** tools (off by default).
+4. In the workflow prompt, tell the agent when to use Zapier (e.g. for Google Sheets: discover → enable → execute).
+
+**Security:** BYOK only — never commit your token. Each MCP tool call consumes Zapier task quota (~2 tasks per call). Tool inputs/outputs are stored in run transcripts.
+
 ## Tech stack
 
 Mirrors the reference project `~/src/hiring` (Candidate Screen), adapted for the Intelligence Engine PoC:
@@ -31,7 +56,7 @@ Mirrors the reference project `~/src/hiring` (Candidate Screen), adapted for the
 | Backend | Python 3.13, Uvicorn, pydantic-settings, python-multipart, aiofiles |
 | Persistence | SQLite (WAL), SQLAlchemy async, aiosqlite, Alembic |
 | LLMs | openai, anthropic, google-generativeai, boto3 (Bedrock) |
-| Agent tools | Playwright (CDP-first), httpx, beautifulsoup4, ddgs, pypdf, python-docx, chevron |
+| Agent tools | Playwright (CDP-first), httpx, beautifulsoup4, ddgs, pypdf, python-docx, chevron, MCP client (`mcp`) |
 
 ## Local browser (agent Chrome)
 

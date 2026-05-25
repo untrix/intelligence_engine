@@ -11,15 +11,9 @@
             </h1>
             <div class="text-muted d-flex flex-wrap align-items-center gap-2">
                 <span>Run #{{ run.id }}</span>
-                {% if run.status == 'running' %}
-                <span class="badge text-bg-primary">running</span>
-                {% elif run.status == 'done' %}
-                <span class="badge text-bg-success">done</span>
-                {% elif run.status == 'error' %}
-                <span class="badge text-bg-danger">error</span>
-                {% else %}
-                <span class="badge text-bg-secondary">{{ run.status }}</span>
-                {% endif %}
+                <span id="run-status-badge" class="badge text-bg-{% if run.status == 'running' %}primary{% elif run.status == 'done' %}success{% elif run.status == 'error' %}danger{% else %}secondary{% endif %}">
+                    {{ run.status }}
+                </span>
                 <span>{{ run.provider }} / {{ run.model }}</span>
                 <span>Started {{ run.started_at.strftime('%Y-%m-%d %H:%M') if run.started_at else '—' }}</span>
                 {% if run.ended_at %}
@@ -27,75 +21,419 @@
                 {% endif %}
             </div>
         </div>
-        <a href="/runs" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Back to Runs
-        </a>
+        <div class="d-flex gap-2">
+            {% if run.status in ('done', 'error') %}
+            <button
+                type="button"
+                class="btn btn-outline-warning"
+                data-bs-toggle="modal"
+                data-bs-target="#runFixModal"
+                hx-post="/runs/{{ run.id }}/fix"
+                hx-target="#run-fix-modal-body"
+                hx-swap="innerHTML"
+                hx-indicator="#run-fix-spinner"
+                hx-on::before-request="document.getElementById('run-fix-modal-body').innerHTML = '<p class=\'text-muted mb-0\'><span class=\'spinner-border spinner-border-sm me-2\' role=\'status\'></span>Analyzing run…</p>'"
+            >
+                <span id="run-fix-spinner" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                <i class="bi bi-wrench-adjustable me-1"></i>Analyze Run
+            </button>
+            {% endif %}
+            <a href="/runs" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Runs
+            </a>
+        </div>
     </div>
 
     <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-chat-dots me-1"></i>Chat History</span>
-            {% if run.status == 'running' %}
-            <span class="text-info small">
-                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                Running — auto-refreshing
-            </span>
-            {% endif %}
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link active"
+                        id="run-result-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#run-result-pane"
+                        type="button"
+                        role="tab"
+                        aria-controls="run-result-pane"
+                        aria-selected="true"
+                    >
+                        <i class="bi bi-file-text me-1"></i>Result
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link"
+                        id="run-thread-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#run-thread-pane"
+                        type="button"
+                        role="tab"
+                        aria-controls="run-thread-pane"
+                        aria-selected="false"
+                    >
+                        <i class="bi bi-chat-dots me-1"></i>Full thread
+                    </button>
+                </li>
+            </ul>
         </div>
-        <div class="card-body" style="max-height: 70vh; overflow-y: auto;" id="messages-scroll">
-            <div id="run-messages-panel"
-                 {% if run.status == 'running' %}
-                 hx-get="/runs/{{ run.id }}/messages"
-                 hx-trigger="every 2s"
-                 hx-swap="innerHTML"
-                 {% endif %}>
-                {% include "runs/_messages.html" %}
+        <div class="card-body tab-content">
+            <div
+                class="tab-pane fade show active"
+                id="run-result-pane"
+                role="tabpanel"
+                aria-labelledby="run-result-tab"
+            >
+                <div
+                    id="run-result-panel"
+                    {% if run.status == 'running' %}
+                    hx-get="/runs/{{ run.id }}/result"
+                    hx-trigger="every 2s"
+                    hx-swap="innerHTML"
+                    {% endif %}
+                >
+                    {% include "runs/_result.html" %}
+                </div>
+            </div>
+            <div
+                class="tab-pane fade"
+                id="run-thread-pane"
+                role="tabpanel"
+                aria-labelledby="run-thread-tab"
+            >
+                <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        id="thread-refresh-once"
+                        hx-get="/runs/{{ run.id }}/messages"
+                        hx-target="#messages-container"
+                        hx-select="#messages-container"
+                        hx-swap="innerHTML"
+                        hx-indicator="#thread-refresh-spinner"
+                        aria-label="Refresh thread once"
+                    >
+                        <span id="thread-refresh-spinner" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                    {% if run.status == 'running' %}
+                    <div class="form-check form-switch mb-0">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="thread-auto-refresh"
+                            aria-controls="run-messages-panel"
+                        >
+                        <label class="form-check-label small text-nowrap" for="thread-auto-refresh">
+                            Auto-refresh
+                        </label>
+                    </div>
+                    {% endif %}
+                    <span id="run-live-indicator" class="text-info small d-none">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        Refreshing
+                    </span>
+                </div>
+                <div style="max-height: 70vh; overflow-y: auto;" id="messages-scroll">
+                    <div
+                        id="run-messages-panel"
+                        data-messages-url="/runs/{{ run.id }}/messages"
+                        data-last-refresh="{{ run.updated_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z"
+                    >
+                        {% include "runs/_messages.html" %}
+                    </div>
+                </div>
+                <div
+                    id="resume-section"
+                    class="mt-3{% if run.status not in ('done', 'error') %} d-none{% endif %}"
+                >
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-reply me-1"></i>Resume Chat
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="/runs/{{ run.id }}/resume">
+                                <div class="mb-3">
+                                    <textarea
+                                        id="resume-user-message"
+                                        name="user_message"
+                                        class="form-control"
+                                        rows="3"
+                                        placeholder="Type a follow-up message to the AI..."
+                                        required
+                                    ></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send me-1"></i>Send
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    {% if run.status in ('done', 'error') %}
-    <div class="card">
-        <div class="card-header">
-            <i class="bi bi-reply me-1"></i>Resume Chat
-        </div>
-        <div class="card-body">
-            <form method="post" action="/runs/{{ run.id }}/resume">
-                <div class="mb-3">
-                    <textarea
-                        name="user_message"
-                        class="form-control"
-                        rows="3"
-                        placeholder="Type a follow-up message to the AI..."
-                        required
-                    ></textarea>
+    <div class="modal fade" id="runFixModal" tabindex="-1" aria-labelledby="runFixModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="runFixModalLabel">
+                        <i class="bi bi-wrench-adjustable me-2"></i>Run analysis
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-send me-1"></i>Send
-                </button>
-            </form>
+                <div class="modal-body" id="run-fix-modal-body">
+                    <p class="text-muted mb-0">Click Analyze Run to get suggestions for this run.</p>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-outline-primary" href="/workflows/{{ run.workflow_id }}/edit">
+                        <i class="bi bi-pencil me-1"></i>Edit workflow
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var scrollEl = document.getElementById('messages-scroll');
-    if (scrollEl) {
-        scrollEl.scrollTop = scrollEl.scrollHeight;
+(function() {
+    var SCROLL_BOTTOM_THRESHOLD = 80;
+
+    function scrollContainer() {
+        return document.getElementById('messages-scroll');
     }
 
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-        if (event.detail.target && event.detail.target.id === 'run-messages-panel') {
-            var el = document.getElementById('messages-scroll');
-            if (el) {
-                el.scrollTop = el.scrollHeight;
+    function isNearBottom(el) {
+        return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_BOTTOM_THRESHOLD;
+    }
+
+    function clearPanelPolling(panelId) {
+        var panel = document.getElementById(panelId);
+        if (!panel) {
+            return;
+        }
+        panel.removeAttribute('hx-get');
+        panel.removeAttribute('hx-trigger');
+        panel.removeAttribute('hx-select');
+        panel.removeAttribute('hx-swap');
+    }
+
+    function isRunRunning() {
+        var marker = document.getElementById('run-status-marker');
+        return marker && marker.dataset.status === 'running';
+    }
+
+    function parseTimestamp(value) {
+        if (!value) {
+            return 0;
+        }
+        var ms = Date.parse(value);
+        return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    function getLastThreadRefresh() {
+        var panel = document.getElementById('run-messages-panel');
+        return panel ? panel.dataset.lastRefresh : '';
+    }
+
+    function setLastThreadRefresh(isoTimestamp) {
+        var panel = document.getElementById('run-messages-panel');
+        if (!panel || !isoTimestamp) {
+            return;
+        }
+        panel.dataset.lastRefresh = isoTimestamp;
+    }
+
+    function setRefreshButtonStale(stale) {
+        var btn = document.getElementById('thread-refresh-once');
+        if (!btn) {
+            return;
+        }
+        btn.classList.toggle('btn-success', stale);
+        btn.classList.toggle('btn-outline-secondary', !stale);
+        btn.setAttribute('aria-label', stale ? 'New messages available — refresh thread' : 'Refresh thread once');
+    }
+
+    function updateThreadRefreshStale(latestUpdate) {
+        if (!isRunRunning()) {
+            setRefreshButtonStale(false);
+            return;
+        }
+        var lastRefreshMs = parseTimestamp(getLastThreadRefresh());
+        var latestUpdateMs = parseTimestamp(latestUpdate);
+        setRefreshButtonStale(latestUpdateMs > lastRefreshMs);
+    }
+
+    function recordThreadRefresh() {
+        var marker = document.getElementById('thread-stale-marker');
+        var refreshedAt = marker && marker.dataset.latestUpdate
+            ? marker.dataset.latestUpdate
+            : new Date().toISOString();
+        setLastThreadRefresh(refreshedAt);
+        setRefreshButtonStale(false);
+    }
+
+    function applyThreadStaleMarker() {
+        var marker = document.getElementById('thread-stale-marker');
+        if (!marker) {
+            return;
+        }
+        updateThreadRefreshStale(marker.dataset.latestUpdate);
+    }
+
+    function setThreadLiveIndicator(visible) {
+        var indicator = document.getElementById('run-live-indicator');
+        if (!indicator) {
+            return;
+        }
+        indicator.classList.toggle('d-none', !visible);
+    }
+
+    function setThreadPolling(enabled) {
+        var panel = document.getElementById('run-messages-panel');
+        var toggle = document.getElementById('thread-auto-refresh');
+        if (!panel) {
+            return;
+        }
+        if (!isRunRunning()) {
+            clearPanelPolling('run-messages-panel');
+            setThreadLiveIndicator(false);
+            if (toggle) {
+                toggle.checked = false;
+                toggle.disabled = true;
+            }
+            return;
+        }
+        if (enabled) {
+            var url = panel.dataset.messagesUrl;
+            if (!url) {
+                return;
+            }
+            panel.setAttribute('hx-get', url);
+            panel.setAttribute('hx-trigger', 'every 2s');
+            panel.setAttribute('hx-select', '#messages-container');
+            panel.setAttribute('hx-swap', 'innerHTML');
+            if (typeof htmx !== 'undefined') {
+                htmx.process(panel);
+                htmx.trigger(panel, 'load');
+            }
+            setThreadLiveIndicator(true);
+        } else {
+            clearPanelPolling('run-messages-panel');
+            setThreadLiveIndicator(false);
+            if (toggle) {
+                toggle.checked = false;
             }
         }
+    }
+
+    function stopRunPolling() {
+        setThreadPolling(false);
+        clearPanelPolling('run-result-panel');
+        setRefreshButtonStale(false);
+        var toggle = document.getElementById('thread-auto-refresh');
+        if (toggle) {
+            toggle.checked = false;
+            toggle.disabled = true;
+        }
+    }
+
+    function maybeStopPollingFromMarker() {
+        var marker = document.getElementById('run-status-marker');
+        if (!marker) {
+            return;
+        }
+        if (marker.dataset.status !== 'running') {
+            stopRunPolling();
+        }
+        updateResumeSectionVisibility(marker.dataset.status);
+    }
+
+    function updateResumeSectionVisibility(status) {
+        var section = document.getElementById('resume-section');
+        if (!section) {
+            return;
+        }
+        if (status === 'done' || status === 'error') {
+            section.classList.remove('d-none');
+        } else {
+            section.classList.add('d-none');
+        }
+    }
+
+    function isThreadMessagesTarget(target) {
+        return target && (
+            target.id === 'run-messages-panel' || target.id === 'messages-container'
+        );
+    }
+
+    function onMessagesPanelSwap(event) {
+        if (!isThreadMessagesTarget(event.detail.target)) {
+            return;
+        }
+
+        maybeStopPollingFromMarker();
+        recordThreadRefresh();
+
+        var scrollEl = scrollContainer();
+        if (!scrollEl) {
+            return;
+        }
+
+        var stickToBottom = event.detail.runStickToBottom;
+        if (stickToBottom) {
+            scrollEl.scrollTop = scrollEl.scrollHeight;
+        } else if (typeof event.detail.preservedScrollTop === 'number') {
+            var heightDelta = scrollEl.scrollHeight - event.detail.prevScrollHeight;
+            scrollEl.scrollTop = event.detail.preservedScrollTop + heightDelta;
+        }
+    }
+
+    function onResultPanelSwap(event) {
+        if (!event.detail.target || event.detail.target.id !== 'run-result-panel') {
+            return;
+        }
+        maybeStopPollingFromMarker();
+        applyThreadStaleMarker();
+    }
+
+    document.body.addEventListener('htmx:beforeSwap', function(event) {
+        var target = event.detail.target;
+        if (!isThreadMessagesTarget(target)) {
+            return;
+        }
+        var scrollEl = scrollContainer();
+        if (!scrollEl) {
+            return;
+        }
+        event.detail.runStickToBottom = isNearBottom(scrollEl);
+        if (!event.detail.runStickToBottom) {
+            event.detail.preservedScrollTop = scrollEl.scrollTop;
+            event.detail.prevScrollHeight = scrollEl.scrollHeight;
+        }
     });
-});
+
+    document.body.addEventListener('htmx:afterSwap', onMessagesPanelSwap);
+    document.body.addEventListener('htmx:afterSwap', onResultPanelSwap);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var scrollEl = scrollContainer();
+        if (scrollEl) {
+            scrollEl.scrollTop = scrollEl.scrollHeight;
+        }
+        var toggle = document.getElementById('thread-auto-refresh');
+        if (toggle) {
+            toggle.addEventListener('change', function() {
+                setThreadPolling(toggle.checked);
+            });
+        }
+        applyThreadStaleMarker();
+    });
+})();
 </script>
 {% endblock %}

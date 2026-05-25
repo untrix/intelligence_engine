@@ -78,7 +78,7 @@
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-dark text-white">
-                <h2 class="h5 mb-0">Allowed Tools</h2>
+                <h2 class="h5 mb-0">Inbuilt Tools</h2>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -100,8 +100,59 @@
                     </div>
                     {% endfor %}
                 </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h2 class="h5 mb-0">Zapier MCP (Agentic)</h2>
+            </div>
+            <div class="card-body">
+                {% if not zapier_mcp_configured %}
+                <p class="text-muted small mb-3">
+                    Configure Zapier on the
+                    <a href="/integrations">Integrations</a> page (MCP Tools card) before enabling these tools.
+                </p>
+                {% else %}
+                <p class="text-muted small mb-3">
+                    Meta-tools for Zapier Agentic mode. For Google Sheets, the agent should discover, enable, then execute actions.
+                </p>
+                {% endif %}
+                <div class="mb-3 {% if not zapier_mcp_configured %}opacity-50{% endif %}">
+                    <div class="form-check">
+                        <input
+                            class="form-check-input zapier-select-all"
+                            type="checkbox"
+                            id="zapier_select_all"
+                            {% if not zapier_mcp_configured %}disabled{% endif %}
+                        >
+                        <label class="form-check-label fw-semibold" for="zapier_select_all">
+                            Enable all Agentic meta-tools
+                        </label>
+                    </div>
+                </div>
+                <div class="row g-3 {% if not zapier_mcp_configured %}opacity-50{% endif %}">
+                    {% for tool in zapier_tools %}
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input zapier-tool-cb"
+                                type="checkbox"
+                                id="zapier_tool_{{ loop.index }}"
+                                name="allowed_tools"
+                                value="{{ tool }}"
+                                {% if tool in selected_tools %}checked{% endif %}
+                                {% if not zapier_mcp_configured %}disabled{% endif %}
+                            >
+                            <label class="form-check-label" for="zapier_tool_{{ loop.index }}">
+                                <code>{{ tool }}</code>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
                 <div class="form-text mt-2">
-                    Workflow execution will use this tool list when calling the LLM.
+                    Workflow execution merges selected inbuilt and Zapier tools when calling the LLM.
                 </div>
             </div>
         </div>
@@ -114,4 +165,15 @@
         </div>
     </form>
 </div>
+<script>
+(function () {
+    var master = document.getElementById('zapier_select_all');
+    if (!master) return;
+    master.addEventListener('change', function () {
+        document.querySelectorAll('.zapier-tool-cb:not(:disabled)').forEach(function (cb) {
+            cb.checked = master.checked;
+        });
+    });
+})();
+</script>
 {% endblock %}

@@ -29,11 +29,111 @@
     </div>
 
     <div class="card shadow-sm mt-4">
-        <div class="card-header bg-dark text-white">
-            <i class="bi bi-hdd-network me-2"></i>MCP Tools
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-hdd-network me-2"></i>MCP Tools — Zapier (Agentic)</span>
+            {% if zapier_configured and zapier_tool_count is not none %}
+            <span class="badge text-bg-success">Connected — {{ zapier_tool_count }} tools</span>
+            {% elif zapier_configured %}
+            <span class="badge text-bg-secondary">Enabled</span>
+            {% endif %}
         </div>
-        <div class="card-body text-muted">
-            To be added
+        <div class="card-body">
+            <p class="text-muted small">
+                Bring your own Zapier account and API token from
+                <a href="https://mcp.zapier.com" target="_blank" rel="noopener noreferrer">mcp.zapier.com</a>.
+                Agentic mode uses meta-tools (<code>discover_zapier_actions</code>,
+                <code>execute_zapier_write_action</code>, etc.) to reach apps like Google Sheets.
+                Each MCP tool call uses Zapier task quota (~2 tasks per call).
+                Run transcripts may contain sensitive data from tool arguments and results.
+            </p>
+
+            <form id="zapier-mcp-form">
+                <div class="form-check form-switch mb-3">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        id="zapier_mcp_enabled"
+                        name="zapier_mcp_enabled"
+                        value="true"
+                        {% if zapier.enabled %}checked{% endif %}
+                    >
+                    <label class="form-check-label" for="zapier_mcp_enabled">
+                        Enable Zapier MCP for workflow runs
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="zapier_mcp_server_url">Server URL</label>
+                    <input
+                        type="url"
+                        class="form-control font-monospace"
+                        id="zapier_mcp_server_url"
+                        name="zapier_mcp_server_url"
+                        value="{{ zapier.server_url }}"
+                        placeholder="https://mcp.zapier.com/api/v1/connect"
+                    >
+                    <div class="form-text">
+                        Paste the Connect URL from Zapier. If it includes <code>?token=</code>, the token is stored separately on save.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-flex justify-content-between align-items-center" for="zapier_mcp_api_token">
+                        <span>API token</span>
+                        {% if zapier_has_token %}
+                        <span class="badge text-bg-secondary">Saved</span>
+                        {% endif %}
+                    </label>
+                    <input
+                        type="password"
+                        class="form-control font-monospace"
+                        id="zapier_mcp_api_token"
+                        name="zapier_mcp_api_token"
+                        placeholder="{% if zapier_has_token %}••••••{% else %}Paste token from Zapier Connect tab{% endif %}"
+                        autocomplete="off"
+                    >
+                    {% if zapier_has_token %}
+                    <input type="hidden" name="zapier_mcp_api_token_unchanged" value="1">
+                    {% endif %}
+                </div>
+
+                {% if zapier_agentic %}
+                <p class="small text-success mb-3">
+                    <i class="bi bi-check-circle me-1"></i>Last test detected <strong>Agentic</strong> meta-tools.
+                </p>
+                {% endif %}
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        hx-post="/integrations/zapier-mcp/save"
+                        hx-include="#zapier-mcp-form"
+                        hx-swap="none"
+                    >
+                        <i class="bi bi-save me-1"></i>Save
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-info"
+                        hx-post="/integrations/zapier-mcp/test"
+                        hx-include="#zapier-mcp-form"
+                        hx-swap="none"
+                    >
+                        <i class="bi bi-plug me-1"></i>Test connection
+                    </button>
+                </div>
+            </form>
+
+            <details class="mt-4">
+                <summary class="small text-muted">Agentic meta-tool names (for workflow editor)</summary>
+                <ul class="small font-monospace mt-2 mb-0">
+                    {% for name in agentic_tool_names %}
+                    <li><code>{{ name }}</code></li>
+                    {% endfor %}
+                </ul>
+            </details>
         </div>
     </div>
 </div>

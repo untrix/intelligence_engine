@@ -1,0 +1,38 @@
+<span id="run-status-marker" data-status="{{ run.status }}" hidden aria-hidden="true"></span>
+{% if run.status == 'running' %}
+<span id="thread-stale-marker" data-latest-update="{{ run.updated_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z" hidden aria-hidden="true" hx-swap-oob="true"></span>
+{% endif %}
+
+{% if run.status != 'running' %}
+<span id="run-live-indicator" hx-swap-oob="innerHTML"></span>
+<span id="run-status-badge" class="badge text-bg-{% if run.status == 'done' %}success{% elif run.status == 'error' %}danger{% else %}secondary{% endif %}" hx-swap-oob="true">
+    {{ run.status }}
+</span>
+{% endif %}
+
+{% if result.kind == 'error' %}
+<div class="alert alert-danger" role="alert">
+    <strong>Run failed</strong>
+</div>
+<div class="reasoning-md">
+    {{ result.body | markdown }}
+</div>
+{% elif result.kind == 'assistant' %}
+<div class="reasoning-md">
+    {{ result.body | markdown }}
+</div>
+{% elif result.kind == 'in_progress' %}
+<div class="text-info small mb-3">
+    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+    Run in progress — showing the latest assistant output so far.
+</div>
+{% if result.body %}
+<div class="reasoning-md">
+    {{ result.body | markdown }}
+</div>
+{% else %}
+<p class="text-muted mb-0">Waiting for the first assistant response…</p>
+{% endif %}
+{% else %}
+<p class="text-muted mb-0">{{ result.body }}</p>
+{% endif %}

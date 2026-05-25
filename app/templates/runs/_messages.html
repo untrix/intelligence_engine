@@ -1,8 +1,14 @@
-{% if run.error %}
-<div class="alert alert-danger" role="alert">
-    <strong>Run error</strong>
-    <pre class="small mb-0 mt-2 text-wrap" style="white-space: pre-wrap;">{{ run.error }}</pre>
-</div>
+<span id="run-status-marker" data-status="{{ run.status }}" hidden aria-hidden="true"></span>
+
+{% if run.status != 'running' %}
+<span id="run-live-indicator" hx-swap-oob="innerHTML"></span>
+<span id="run-status-badge" class="badge text-bg-{% if run.status == 'done' %}success{% elif run.status == 'error' %}danger{% else %}secondary{% endif %}" hx-swap-oob="true">
+    {{ run.status }}
+</span>
+{% endif %}
+
+{% if run.status == 'running' %}
+<span id="thread-stale-marker" data-latest-update="{{ run.updated_at.strftime('%Y-%m-%dT%H:%M:%S') }}Z" hidden aria-hidden="true" hx-swap-oob="true"></span>
 {% endif %}
 
 <div id="messages-container">

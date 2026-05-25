@@ -29,12 +29,10 @@ async def save_setting(db: AsyncSession, key: str, value: str):
         db.add(AppSettings(key=key, value=value or ""))
 
 
-def _hx_trigger_toast(message: str, toast_type: str = "success"):
-    return {
-        "HX-Trigger": json.dumps(
-            {"showToast": {"message": message, "type": toast_type}}
-        )
-    }
+def _hx_trigger_toast(message: str, toast_type: str = "success", **extra):
+    triggers = {"showToast": {"message": message, "type": toast_type}}
+    triggers.update(extra)
+    return {"HX-Trigger": json.dumps(triggers)}
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -60,10 +58,7 @@ async def save_settings(
     google_api_key: str = Form(""),
     aws_profile: str = Form(""),
     aws_region: str = Form("us-east-1"),
-    chrome_profile_path: str = Form(""),
-    chrome_profile_name: str = Form("Default"),
     chrome_cdp_url: str = Form(""),
-    chrome_headed: str = Form("false"),
     default_provider: str = Form("openai"),
     default_model: str = Form(""),
     default_concurrency: str = Form("5"),
@@ -100,10 +95,7 @@ async def save_settings(
         ),
         "aws_profile": aws_profile,
         "aws_region": aws_region,
-        "chrome_profile_path": chrome_profile_path,
-        "chrome_profile_name": chrome_profile_name,
         "chrome_cdp_url": chrome_cdp_url,
-        "chrome_headed": chrome_headed,
         "default_provider": default_provider,
         "default_model": default_model,
         "default_concurrency": default_concurrency,
@@ -116,10 +108,11 @@ async def save_settings(
     toast_message = (
         f"{clear_key.capitalize()} API key cleared" if key_to_clear else "Settings saved"
     )
+    extra_triggers = {"apiKeyCleared": {"provider": clear_key}} if key_to_clear else {}
     return HTMLResponse(
         content="",
         status_code=200,
-        headers=_hx_trigger_toast(toast_message, "success"),
+        headers=_hx_trigger_toast(toast_message, "success", **extra_triggers),
     )
 
 
