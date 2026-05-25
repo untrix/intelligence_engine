@@ -38,7 +38,11 @@ class WorkflowDefinition(Base):
 
 
 class PlaybookSettings(Base):
-    """Persisted settings for an agent orchestration playbook."""
+    """Persisted settings for a Runtime Algorithm.
+
+    The table/column names intentionally keep the legacy "playbook" terminology
+    to avoid a database migration for a product-language rename.
+    """
 
     __tablename__ = "playbook_settings"
 

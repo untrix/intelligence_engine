@@ -39,7 +39,7 @@
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-dark text-white">
-                <h2 class="h5 mb-0">Playbook</h2>
+                <h2 class="h5 mb-0">Runtime Algorithm</h2>
             </div>
             <div class="card-body">
                 <select class="form-select form-select-lg" id="playbook_name" name="playbook_name">
@@ -50,7 +50,9 @@
                     {% endfor %}
                 </select>
                 <div class="form-text">
-                    The workflow inherits its system prompt from the selected playbook. In this PoC, playbook system prompts are empty illustrations.
+                    The Runtime Algorithm defines how this workflow runs inside the
+                    Agent Runtime. In this PoC, advanced algorithms are illustrations
+                    and all workflows execute Single Turn with optional tool calls.
                 </div>
             </div>
         </div>

@@ -25,7 +25,7 @@ MAX_TRANSCRIPT_CHARS = 80_000
 TOOL_RESULT_TRUNCATE = 4_000
 TOOL_RESULT_HEAD_TAIL = 2_000
 
-RUN_FIX_SYSTEM_PROMPT = """You are an expert reviewer for Intelligence Engine workflow runs. Intelligence Engine is a local PoC that runs user-defined workflows: a playbook system prompt, a Mustache user prompt template, and a set of allowed agent tools. Each run persists a full chat transcript (system, user, assistant, tool_call, tool_result).
+RUN_FIX_SYSTEM_PROMPT = """You are an expert reviewer for Intelligence Engine workflow runs. Intelligence Engine is a local PoC that runs user-defined workflows: a Runtime Algorithm system prompt, a Mustache user prompt template, and a set of allowed agent tools. Each run persists a full chat transcript (system, user, assistant, tool_call, tool_result).
 
 Your job is to analyze one completed or failed run and help the human operator fix problems and improve the workflow for the next run.
 
@@ -172,7 +172,7 @@ def build_analysis_user_message(
 - Ended: {ended}
 - Run error: {run_error}
 - Workflow name: {workflow.name} (workflow_id={workflow.id})
-- Playbook: {workflow.playbook_name}
+- Runtime Algorithm: {workflow.playbook_name}
 - Allowed tools: {", ".join(allowed_tools) if allowed_tools else "(none)"}
 - Run variables: {json.dumps(variables, indent=2)}
 - App home directory: {settings.home_dir}
@@ -183,7 +183,7 @@ def build_analysis_user_message(
 ### user_prompt_template
 {workflow.user_prompt_template}
 
-### playbook system_prompt
+### Runtime Algorithm system_prompt
 {system_prompt or "(empty)"}
 """
 

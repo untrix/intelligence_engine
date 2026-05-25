@@ -53,16 +53,6 @@ This product is designed around three main requirements:
       3. Inspect tool calls  
       4. etc.
 
-#### **Unresolved Issues**
-1. Headless deployment for the enterprise (but this may not be necessary)  
-2. Browser Integration:
-   1. Clunky: A separate copy of Chrome browser needs to be started in develper mode (make chrome-debug). This is a clunky user experience and needs to be fixed.
-   3. Unstable: The Google Chrome CDP (Chrome Dev Tools) API is unstable because Google can change or take away the functionality at any time. A more reliable solution is neeed. Cloudflare's Browser Run MCP is an option but does not fully replace the rich and secure integration exposed by Chrome Deve Tools (CDP). Bundling a browser along with the app like Perplexity and Cursor do is a possible solution.
-   4. Works reliably for only reading. For writing / editing, "Computer Use" tool is needed, which is expensive, slow and unreliable.
-3. MCP Integration:
-   Integration via. thirdparty MCP servers such as Zapier and Cloudflare may appear like a solved problem, however, since they are brittle since they depend on traditional software APIs
-
-
 ### **Workflow**
 
 A workflow is the central unit of computation. The user defines a workflow and the platform runs it.
@@ -72,18 +62,27 @@ A workflow is the central unit of computation. The user defines a workflow and t
     * User develops these prompts  
     * Mention internal or external websites to visit as natural part of instructions
   * Tools available to use (via. MCP): User selects from available tools.  
-  * Agent Orchestration Playbook (see below)  
+  * Agent Runtime (see below)  
   * Uploaded Files
 * A prompt builder helps user build a good prompt  
   * A “prompt compiler” rewrites a user’s prompt into detailed step-by-step instructions suitable for an agent  
 * Run on demand or automatically  
   * Chat threads are viewable and interruptible
   * Chat threads are resumable  
-* Agent Orchestration Playbook: Defines a set of agents and how they cooperate to run a task and other related patterns like Memory.
-The simplest playbook is “Single-Turn + Multiple Toolcalls”. There is only one agent. The workflow stops after the LLM returns a response that’s not a toolcall. Usually the LLM will call multiple tools (e.g. navigate webpages, search the web etc.) and finish its task before it generates a response. This works in a lot of use-cases. There are more complex orchestration patterns where there are multiple cooperating agents with specific roles. For e.g. there could be a main orchestrator, a planner, a verifier and a summarizer implementing the ReAct pattern. Then there could be playbooks implementing specific algorithms such as Montecarlo Tree Search (MCTS). These will be maintained by us.
-* Workflows are stored in a central database against the username. Some playbooks may store and retrieve memory and learnt skills.
+* Agent Runtime: Defines how a workflow runs, including single-pass execution, tool-calling loops, multiple cooperating agents, and related patterns like Memory.
+   The simplest Runtime Algorithm is “Single-Turn + Multiple Toolcalls”. There is only one agent. The workflow stops after the LLM returns a response that’s not a toolcall. Usually the LLM will call multiple tools (e.g. navigate webpages, search the web etc.) and finish its task before it generates a response. This works in a lot of use-cases. There are more complex Runtime Algorithms consisting of multiple cooperating agents with specific roles. For e.g. there could be a main orchestrator, a planner, a verifier and a summarizer implementing the ReAct pattern. Then there could be Runtime Algorithms implementing specific algorithms such as Montecarlo Tree Search (MCTS). Some Runtime Algorithms may store and retrieve memory and learnt skills. These will be maintained by Agent Platform team.
+* Workflows are stored in a central database against the username.
 
 ### **Competition**
 
 Though I haven’t conducted an exhaustive review of competition, one can expect a fair amount of competition in this area. Claude Cowork, Hermes, OpenClaw, Perplexity / Comet, Cursor and several other Agent Harness products come to mind. So far, these products demand a high level of technical skillset on part of the end-user. Therefore our product strategy will have to focus on expanding the target user base by making the product extremely easy to install, use, integrate and secure - the iPhone of agent apps. This sentiment raised ideas like local-browser based integration, the workflow builder & compiler concept and inbuilt-firewall and autobuilding workflow GUI.
 
+
+#### **Unresolved Issues**
+1. Headless deployment for the enterprise (but this may not be necessary)  
+2. Browser Integration:
+   1. Clunky: A separate copy of Chrome browser needs to be started in develper mode (make chrome-debug). This is a clunky user experience and needs to be fixed.
+   3. Unstable: The Google Chrome CDP (Chrome Dev Tools) API is unstable because Google can change or take away the functionality at any time. A more reliable solution is neeed. Cloudflare's Browser Run MCP is an option but does not fully replace the rich and secure integration exposed by Chrome Deve Tools (CDP). Bundling a browser along with the app like Perplexity and Cursor do is a possible solution.
+   4. Works reliably for only reading. For writing / editing, "Computer Use" tool is needed, which is expensive, slow and unreliable.
+3. MCP Integration can be Brittle:
+   Integration via. thirdparty MCP servers such as Zapier and Cloudflare may appear like a solved problem, however, since they are brittle since they depend on traditional software APIs
