@@ -53,7 +53,7 @@ The product should make integration and adoption as frictionless as possible. Th
 
 #### Local Browser Integration
 
-The first adoption path is self-serve integration through a local web browser.
+The first adoption path is self-serve integration through a local web browser. The browser should ideally be integrated into the Agent Platform app, but for the 48 hour challenge PoC I've integrated a sidecar browswer via CDP. 
 
 The app runs on a laptop or desktop. The user signs in to the sites they already have access to, and agents interact with those sites through the browser. This provides:
 
