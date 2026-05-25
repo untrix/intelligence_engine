@@ -41,9 +41,23 @@ curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/dev/scri
 
 The script creates:
 
-- `~/AgentPlatform/data` for app state
 - `~/AgentPlatform/workspace` for files visible to workflow local-file tools
 - `~/AgentPlatform/workspace/.AgentPlatform` as the app-managed writable workspace folder
+- `~/AgentPlatform/start-agent-chrome.sh` as the visible helper for launching Agent Chrome
+- `~/AgentPlatform/.AgentPlatform` for product-managed files such as app data, Docker Compose, and the Agent Chrome profile
+
+Start Agent Chrome in the background:
+
+```bash
+~/AgentPlatform/start-agent-chrome.sh
+```
+
+Start the app container:
+
+```bash
+cd ~/AgentPlatform/.AgentPlatform
+docker compose up -d
+```
 
 For local development from this checkout:
 

@@ -3,9 +3,11 @@ set -euo pipefail
 
 INSTALL_ROOT="${AGENT_PLATFORM_ROOT:-"$HOME/AgentPlatform"}"
 IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/untrix/intelligence_engine:dev}"
-COMPOSE_FILE="$INSTALL_ROOT/docker-compose.yml"
+APP_ROOT="$INSTALL_ROOT/.AgentPlatform"
+COMPOSE_FILE="$APP_ROOT/docker-compose.yml"
+CHROME_LAUNCHER="$INSTALL_ROOT/start-agent-chrome.sh"
 
-mkdir -p "$INSTALL_ROOT/data"
+mkdir -p "$APP_ROOT/data"
 mkdir -p "$INSTALL_ROOT/workspace/.AgentPlatform"
 
 cat > "$COMPOSE_FILE" <<YAML
@@ -21,10 +23,26 @@ services:
       INTELLIGENCE_ENGINE_WORKSPACE_ROOT: /workspace
       INTELLIGENCE_ENGINE_CHROME_CDP_URL: http://host.docker.internal:9222
     volumes:
-      - "$INSTALL_ROOT/data:/app/data"
+      - "$APP_ROOT/data:/app/data"
       - "$INSTALL_ROOT/workspace:/workspace:ro"
       - "$INSTALL_ROOT/workspace/.AgentPlatform:/workspace/.AgentPlatform:rw"
 YAML
+
+cat > "$CHROME_LAUNCHER" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+
+/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\
+  --remote-debugging-address=127.0.0.1 \\
+  --remote-debugging-port=9222 \\
+  --user-data-dir="$APP_ROOT/chrome-debug" \\
+  --new-window \\
+  >/dev/null 2>&1 &
+
+echo "Agent Chrome started in the background."
+SH
+
+chmod +x "$CHROME_LAUNCHER"
 
 cat <<EOF
 Agent Platform folders are ready under:
@@ -34,19 +52,19 @@ Docker Compose file:
   $COMPOSE_FILE
 
 1. Launch host Agent Chrome:
-   /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\
-     --remote-debugging-address=127.0.0.1 \\
-     --remote-debugging-port=9222 \\
-     --user-data-dir="$INSTALL_ROOT/chrome-debug" \\
-     --new-window
+   "$CHROME_LAUNCHER"
 
 2. Start Agent Platform:
-   cd "$INSTALL_ROOT"
+   cd "$APP_ROOT"
    docker compose up -d
 
 3. Open:
    http://localhost:8001
 
-Override the image before running this installer with:
-  AGENT_PLATFORM_IMAGE=ghcr.io/untrix/intelligence_engine:<tag>
+By default, this install uses Docker image:
+  $IMAGE
+
+To install a different published image tag, set AGENT_PLATFORM_IMAGE before
+running this installer. Example:
+  AGENT_PLATFORM_IMAGE=ghcr.io/untrix/intelligence_engine:v0.1
 EOF
