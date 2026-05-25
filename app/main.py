@@ -96,7 +96,7 @@ async def _seed_defaults():
 
     defaults = {
         "default_provider": "openai",
-        "default_model": "gpt-4o",
+        "default_model": "gpt-5.5",
         "default_concurrency": "5",
         "openai_api_key": "",
         "anthropic_api_key": "",
@@ -113,8 +113,11 @@ async def _seed_defaults():
             result = await session.execute(
                 select(AppSettings).where(AppSettings.key == key)
             )
-            if not result.scalar_one_or_none():
+            setting = result.scalar_one_or_none()
+            if not setting:
                 session.add(AppSettings(key=key, value=value))
+            elif key == "default_model" and setting.value == "gpt-4o":
+                setting.value = value
         await session.commit()
 
 

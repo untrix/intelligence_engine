@@ -230,7 +230,7 @@ async def analyze_run(run_id: int) -> str:
 
     app_settings = await _settings_dict()
     provider_name = (app_settings.get("default_provider") or "openai").strip() or "openai"
-    model = (app_settings.get("default_model") or "gpt-4o").strip() or "gpt-4o"
+    model = (app_settings.get("default_model") or "gpt-5.5").strip() or "gpt-5.5"
 
     user_content = build_analysis_user_message(run, workflow, playbook, messages)
     llm_messages = [

@@ -94,7 +94,7 @@ async def create_and_start_workflow_run(
     variables = variables or {}
     settings = await _settings_dict()
     provider_name = (settings.get("default_provider") or "openai").strip() or "openai"
-    model = (settings.get("default_model") or "gpt-4o").strip() or "gpt-4o"
+    model = (settings.get("default_model") or "gpt-5.5").strip() or "gpt-5.5"
 
     async with async_session() as db:
         workflow = await db.get(WorkflowDefinition, workflow_id)
