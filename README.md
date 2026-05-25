@@ -7,6 +7,7 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
 
 ## Prerequisites
 
+- Runs on Mac only
 - Python 3.13
 - Google Chrome (for local-browser agent tools via CDP)
 - Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
