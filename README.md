@@ -10,9 +10,9 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
 - Runs on Mac only
 - Google Chrome (for local-browser agent tools via CDP)
 - LLM API Key (OpenAI preferred)
-- Optional but preferrable: Zapier MCP Server URL and token
+- Optional but preferable: Zapier MCP Server URL and token
 - Non Developers - Install via Docker
-    - Docker Desktop
+    - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Developers - Clone the Repo
     - Python 3.13
     - Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
@@ -25,7 +25,7 @@ Two Parts:
 
 ### Option 1: Run inside Docker (recommended)
 
-- You need to have Docker Desktop
+- You need to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
 - You need to have Google Chrome
 - The Agent Platform Python app runs as a docker container
 - A separate copy of chrome (Agent Chrome) runs on your Mac and the Agent Platform app talks to it. 
@@ -55,9 +55,9 @@ To stop them in the future:
 ```
 
 ### Setup Agent Chrome
-- Once Agent Chrome is up, you can sign into a Chrome profiile to make things easier, but you don't have to. 
+- Once Agent Chrome is up, you can sign into a Chrome profile to make things easier, but you don't have to. 
 - However, this is your integration point into authenticated apps / websites. Therefore you should log into any apps / websites that you want the LLM to have access to - e.g. JIRA, Confluence, LinkedIn, Workday, Google Docs etc.
-- This is the full Chrome web-browser that you installed and therefore is is not limited in capability.
+- This is the full Chrome web-browser that you installed and therefore is not limited in capability.
 - This is how you integrate into your Company with zero effort from IT, but still relying on the company’s existing security controls.
 
 ### Setup the app
@@ -86,7 +86,7 @@ Try out the sample workflows after you have the app and Agent Chrome setup. Two 
 
 ### New Workflows
 - You can define new workflows as well from the Workflows page.
-- Local file paths resolve against ~/AgentPlatform/workspaace (docker setup) and agains the repository root (developer setup)
+- Local file paths resolve against ~/AgentPlatform/workspace (docker setup) and against the repository root (developer setup)
 
 ### Setting up Zapier MCP Connection
 
