@@ -1,4 +1,4 @@
-.PHONY: setup compile sync install deps dev run clean chrome-debug chrome-debug-check migrate docker-build docker-up docker-down docker-logs
+.PHONY: setup compile sync install deps dev run clean chrome-debug chrome-debug-check migrate docker-build docker-build-ghcr docker-push-ghcr docker-release-ghcr docker-up docker-down docker-logs
 
 PYTHON := python3.13
 VENV := .venv
@@ -13,6 +13,8 @@ INTELLIGENCE_ENGINE_WORKSPACE_ROOT ?= $(PROJECT_ROOT)
 INTELLIGENCE_ENGINE_HOME_DIR ?= $(INTELLIGENCE_ENGINE_WORKSPACE_ROOT)
 INTELLIGENCE_ENGINE_DATA_DIR ?= $(PROJECT_ROOT)/data
 AGENT_PLATFORM_IMAGE ?= agent-platform:latest
+GHCR_IMAGE ?= ghcr.io/untrix/intelligence_engine
+GHCR_TAG ?= main
 CHROME ?= "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 DEBUG_PORT ?= 9222
 CHROME_PROFILE ?= Default
@@ -42,6 +44,14 @@ migrate:
 
 docker-build:
 	docker build -t $(AGENT_PLATFORM_IMAGE) .
+
+docker-build-ghcr:
+	docker build -t $(GHCR_IMAGE):$(GHCR_TAG) .
+
+docker-push-ghcr:
+	docker push $(GHCR_IMAGE):$(GHCR_TAG)
+
+docker-release-ghcr: docker-build-ghcr docker-push-ghcr
 
 docker-up:
 	docker compose up --build
