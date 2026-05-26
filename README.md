@@ -38,19 +38,18 @@ Run the Mac setup script from this repository URL:
 curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/dev/scripts/install-agent-platform-mac.sh | bash
 ```
 
-The script creates:
-
-- `~/AgentPlatform/workspace` for files visible to workflow local-file tools
-- `~/AgentPlatform/workspace/.AgentPlatform` as the app-managed writable workspace folder
-- `~/AgentPlatform/start-agent-chrome.sh` as the visible helper for launching Agent Chrome
-- `~/AgentPlatform/start-agent-platform.sh` as the visible helper for starting the app container
-- `~/AgentPlatform/.AgentPlatform` for product-managed files such as app data, Docker Compose, and the Agent Chrome profile
-
 Run the following scripts to start Agent Chrome in the background and then start the app container:
 
 ```bash
 ~/AgentPlatform/start-agent-chrome.sh
 ~/AgentPlatform/start-agent-platform.sh
+```
+
+To stop them in the future:
+
+```bash
+~/AgentPlatform/stop-agent-platform.sh
+~/AgentPlatform/stop-agent-chrome.sh
 ```
 
 ### Option 2: Developer Setup
@@ -106,7 +105,6 @@ Connect Zapier’s Agentic MCP server apps via meta-tools (`discover_zapier_acti
 1. Create a server and API token at [mcp.zapier.com](https://mcp.zapier.com).
 2. Open **Integrations** → **MCP Tools — Zapier**, paste the server URL and token, **Test connection**, then **Save**.
 3. Edit a workflow and enable **Zapier MCP (Agentic)** tools (off by default).
-4. In the workflow prompt, tell the agent when to use Zapier.
 
 
 # Developer Zone

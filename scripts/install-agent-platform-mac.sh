@@ -7,6 +7,8 @@ APP_ROOT="$INSTALL_ROOT/.AgentPlatform"
 COMPOSE_FILE="$APP_ROOT/docker-compose.yml"
 CHROME_LAUNCHER="$INSTALL_ROOT/start-agent-chrome.sh"
 PLATFORM_LAUNCHER="$INSTALL_ROOT/start-agent-platform.sh"
+CHROME_STOPPER="$INSTALL_ROOT/stop-agent-chrome.sh"
+PLATFORM_STOPPER="$INSTALL_ROOT/stop-agent-platform.sh"
 
 mkdir -p "$APP_ROOT/data"
 mkdir -p "$INSTALL_ROOT/workspace/.AgentPlatform"
@@ -56,6 +58,31 @@ SH
 
 chmod +x "$PLATFORM_LAUNCHER"
 
+cat > "$CHROME_STOPPER" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+
+if pgrep -f "$APP_ROOT/chrome-debug" >/dev/null 2>&1; then
+  pkill -f "$APP_ROOT/chrome-debug" >/dev/null 2>&1 || true
+  echo "Agent Chrome stopped."
+else
+  echo "Agent Chrome is not running."
+fi
+SH
+
+chmod +x "$CHROME_STOPPER"
+
+cat > "$PLATFORM_STOPPER" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose -f "$COMPOSE_FILE" down
+
+echo "Agent Platform stopped."
+SH
+
+chmod +x "$PLATFORM_STOPPER"
+
 cat <<EOF
 Agent Platform folders are ready under:
   $INSTALL_ROOT
@@ -71,6 +98,12 @@ Docker Compose file:
 
 3. Open:
    http://localhost:8001
+
+To stop Agent Platform:
+   "$PLATFORM_STOPPER"
+
+To stop Agent Chrome:
+   "$CHROME_STOPPER"
 
 By default, this install uses Docker image:
   $IMAGE
