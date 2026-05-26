@@ -45,23 +45,13 @@ Run the following scripts to start Agent Chrome in the background and then start
 ~/AgentPlatform/start-agent-platform.sh
 ```
 
+Open http://localhost:8001 in any browser (including the Agent Browser)
+
 To stop them in the future:
 
 ```bash
 ~/AgentPlatform/stop-agent-platform.sh
 ~/AgentPlatform/stop-agent-chrome.sh
-```
-
-### Option 2: Developer Setup
-
-```bash
-git clone git@github.com:untrix/intelligence_engine.git
-cd ./intelligence_engine
-make setup
-source .venv/bin/activate   # shell prompt shows (ie)
-make sync
-make chrome-debug   # launches a new copy of Chrome Browser distinct from the one already running. In this browser, log into all authenticated apps that you want to integrate with.
-make run  # launches the Agent Platform Python app.
 ```
 
 ### Setup Agent Chrome
@@ -107,7 +97,20 @@ Connect Zapier’s Agentic MCP server apps via meta-tools (`discover_zapier_acti
 3. Edit a workflow and enable **Zapier MCP (Agentic)** tools (off by default).
 
 
+### Install Option 2: Developer Setup
+
+```bash
+git clone git@github.com:untrix/intelligence_engine.git
+cd ./intelligence_engine
+make setup
+source .venv/bin/activate   # shell prompt shows (ie)
+make sync
+make chrome-debug   # launches a new copy of Chrome Browser distinct from the one already running. In this browser, log into all authenticated apps that you want to integrate with.
+make run  # launches the Agent Platform Python app.
+```
+
 # Developer Zone
+
 
 ## Tech stack
 
