@@ -35,14 +35,91 @@ cat > "$CHROME_LAUNCHER" <<SH
 #!/usr/bin/env bash
 set -euo pipefail
 
-/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\
+CDP_URL="http://127.0.0.1:9222/json/version"
+USER_DATA_DIR="$APP_ROOT/chrome-debug"
+
+is_cdp_ready() {
+  curl -fsS "\$CDP_URL" >/dev/null 2>&1
+}
+
+print_manual_workaround() {
+  local chrome_path="\${1:-/path/to/Google Chrome}"
+  printf '%s\n' "Agent Chrome did not start automatically."
+  printf '%s\n' ""
+  printf '%s\n' "Manual workaround:"
+  printf '%s\n' "1. Locate Google Chrome on this Mac."
+  printf '%s\n' "2. Run this command, replacing the Chrome path if needed:"
+  printf '%s\n' ""
+  printf '   "%s" \\\\\n' "\$chrome_path"
+  printf '%s\n' '     --remote-debugging-address=127.0.0.1 \'
+  printf '%s\n' '     --remote-debugging-port=9222 \'
+  printf '%s\n' '     --user-data-dir="$APP_ROOT/chrome-debug" \'
+  printf '%s\n' '     --new-window \'
+  printf '%s\n' '     >/dev/null 2>&1 &'
+  printf '%s\n' ""
+  printf '%s\n' "If Chrome is installed in a custom location, rerun this helper with:"
+  printf '%s\n' ""
+  printf '%s\n' '   AGENT_CHROME_PATH="/path/to/Google Chrome" "$CHROME_LAUNCHER"'
+}
+
+find_chrome() {
+  local candidates=(
+    "\${AGENT_CHROME_PATH:-}"
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    "\$HOME/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+    "\$HOME/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+  )
+
+  local candidate
+  for candidate in "\${candidates[@]}"; do
+    if [ -n "\$candidate" ] && [ -x "\$candidate" ]; then
+      printf '%s\n' "\$candidate"
+      return 0
+    fi
+  done
+
+  if command -v mdfind >/dev/null 2>&1; then
+    local app_path
+    app_path="\$(mdfind "kMDItemCFBundleIdentifier == 'com.google.Chrome'" 2>/dev/null | head -n 1 || true)"
+    if [ -n "\$app_path" ] && [ -x "\$app_path/Contents/MacOS/Google Chrome" ]; then
+      printf '%s\n' "\$app_path/Contents/MacOS/Google Chrome"
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+if is_cdp_ready; then
+  echo "Agent Chrome is already running."
+  exit 0
+fi
+
+CHROME_BIN="\$(find_chrome || true)"
+if [ -z "\$CHROME_BIN" ]; then
+  echo "Could not find Google Chrome automatically." >&2
+  print_manual_workaround "/path/to/Google Chrome" >&2
+  exit 1
+fi
+
+"\$CHROME_BIN" \\
   --remote-debugging-address=127.0.0.1 \\
   --remote-debugging-port=9222 \\
-  --user-data-dir="$APP_ROOT/chrome-debug" \\
+  --user-data-dir="\$USER_DATA_DIR" \\
   --new-window \\
   >/dev/null 2>&1 &
 
-echo "Agent Chrome started in the background."
+for _ in {1..20}; do
+  if is_cdp_ready; then
+    echo "Agent Chrome started in the background."
+    exit 0
+  fi
+  sleep 0.5
+done
+
+print_manual_workaround "\$CHROME_BIN" >&2
+exit 1
 SH
 
 chmod +x "$CHROME_LAUNCHER"

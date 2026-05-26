@@ -18,7 +18,7 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
     - Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
 
 ## Installation
-Two Parts:
+THe product has two parts:
 - Agent Platform: A python app that either runs either directly on your laptop (developer setup) or as a docker container (docker setup).
 - Agent Chrome: A second instance of your Chrome browser (which you have already installed).
     - Looks and feels the same as the main instance - even the Dock bar icons are the identical. This is a PoC :)
@@ -30,7 +30,7 @@ Two Parts:
 - The Agent Platform Python app runs as a docker container
 - A separate copy of chrome (Agent Chrome) runs on your Mac and the Agent Platform app talks to it. 
 
-Optional: To cleanup a previous install, stop the docker container, Agent Chrome and delete the `~/AgentPlatform` folder.
+Optional: To cleanup a previous install, stop the docker container and Agent Chrome and then delete the `~/AgentPlatform` folder.
 
 Run the Mac setup script from this repository URL:
 
@@ -45,7 +45,7 @@ Run the following scripts to start Agent Chrome in the background and then start
 ~/AgentPlatform/start-agent-platform.sh
 ```
 
-Open http://localhost:8001 in any browser (including the Agent Browser)
+Open http://localhost:8001 in any browser (including Agent Chrome)
 
 To stop them in the future:
 
