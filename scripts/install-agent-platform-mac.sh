@@ -6,6 +6,7 @@ IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/untrix/intelligence_engine:dev}"
 APP_ROOT="$INSTALL_ROOT/.AgentPlatform"
 COMPOSE_FILE="$APP_ROOT/docker-compose.yml"
 CHROME_LAUNCHER="$INSTALL_ROOT/start-agent-chrome.sh"
+PLATFORM_LAUNCHER="$INSTALL_ROOT/start-agent-platform.sh"
 
 mkdir -p "$APP_ROOT/data"
 mkdir -p "$INSTALL_ROOT/workspace/.AgentPlatform"
@@ -44,6 +45,17 @@ SH
 
 chmod +x "$CHROME_LAUNCHER"
 
+cat > "$PLATFORM_LAUNCHER" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose -f "$COMPOSE_FILE" up -d
+
+echo "Agent Platform started. Open http://localhost:8001"
+SH
+
+chmod +x "$PLATFORM_LAUNCHER"
+
 cat <<EOF
 Agent Platform folders are ready under:
   $INSTALL_ROOT
@@ -55,8 +67,7 @@ Docker Compose file:
    "$CHROME_LAUNCHER"
 
 2. Start Agent Platform:
-   cd "$APP_ROOT"
-   docker compose up -d
+   "$PLATFORM_LAUNCHER"
 
 3. Open:
    http://localhost:8001

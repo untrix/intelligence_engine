@@ -17,23 +17,22 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
     - Python 3.13
     - Optional: `uv` on your `PATH` for the first `make compile` before `uv` is installed into the virtual environment
 
-## First-time setup
+## Installation
+Two Parts:
+- Agent Platform: A python app that either runs either directly on your laptop (developer setup) or as a docker container (docker setup).
+- Agent Chrome: A second instance of your Chrome browser (which you have already installed).
+    - Looks and feels the same as the main instance - even the Dock bar icons are the identical. This is a PoC :)
 
-```bash
-make setup
-source .venv/bin/activate   # shell prompt shows (ie)
-make sync
-make chrome-debug   # launches a new copy of Chrome Browser distinct from the one already running. In this browser, log into your google account at profile level or at least into gmail.
-make dev
-```
+### Option 1: Run inside Docker (recommended)
 
-Open [http://localhost:8001](http://localhost:8001) preferably in the same browser you just opened and configure API keys under **Settings**.
+- You need to have Docker Desktop
+- You need to have Google Chrome
+- The Agent Platform Python app runs as a docker container
+- A separate copy of chrome (Agent Chrome) runs on your Mac and the Agent Platform app talks to it. 
 
-## Docker quick start (app container + host Chrome)
+Optional: To cleanup a previous install, stop the docker container, Agent Chrome and delete the `~/AgentPlatform` folder.
 
-Option A runs only the Agent Platform app in Docker. Agent Chrome remains a normal Mac Chrome window, so users can browse and sign in natively while the container connects to Chrome through CDP.
-
-For an end-user style install, run the Mac setup script from this repository URL:
+Run the Mac setup script from this repository URL:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/dev/scripts/install-agent-platform-mac.sh | bash
@@ -44,54 +43,73 @@ The script creates:
 - `~/AgentPlatform/workspace` for files visible to workflow local-file tools
 - `~/AgentPlatform/workspace/.AgentPlatform` as the app-managed writable workspace folder
 - `~/AgentPlatform/start-agent-chrome.sh` as the visible helper for launching Agent Chrome
+- `~/AgentPlatform/start-agent-platform.sh` as the visible helper for starting the app container
 - `~/AgentPlatform/.AgentPlatform` for product-managed files such as app data, Docker Compose, and the Agent Chrome profile
 
-Start Agent Chrome in the background:
+Run the following scripts to start Agent Chrome in the background and then start the app container:
 
 ```bash
 ~/AgentPlatform/start-agent-chrome.sh
+~/AgentPlatform/start-agent-platform.sh
 ```
 
-Start the app container:
+### Option 2: Developer Setup
 
 ```bash
-cd ~/AgentPlatform/.AgentPlatform
-docker compose up -d
+git clone git@github.com:untrix/intelligence_engine.git
+cd ./intelligence_engine
+make setup
+source .venv/bin/activate   # shell prompt shows (ie)
+make sync
+make chrome-debug   # launches a new copy of Chrome Browser distinct from the one already running. In this browser, log into all authenticated apps that you want to integrate with.
+make run  # launches the Agent Platform Python app.
 ```
 
-For local development from this checkout:
+### Setup Agent Chrome
+- Once Agent Chrome is up, you can sign into a Chrome profiile to make things easier, but you don't have to. 
+- However, this is your integration point into authenticated apps / websites. Therefore you should log into any apps / websites that you want the LLM to have access to - e.g. JIRA, Confluence, LinkedIn, Workday, Google Docs etc.
+- This is the full Chrome web-browser that you installed and therefore is is not limited in capability.
+- This is how you integrate into your Company with zero effort from IT, but still relying on the company’s existing security controls.
 
-```bash
-make chrome-debug
-make docker-up
-```
+### Setup the app
+- Open [http://localhost:8001](http://localhost:8001) in any browser (including the Agent Browser)
+- Go to **Settings** and setup at least one LLM API Key (OpenAI works reliably).
+- Under settings also, setup default LLM - prefer to use the most powerful one you have available (I use gpt-5.5). The choice will impact the quality of runs.
+- If you have a Zapier MCP Server URL and token, then set those up too. Without this you won't be able to use Zapier of course.
 
-Then open [http://localhost:8001](http://localhost:8001). In Docker, **Settings** should use `http://host.docker.internal:9222` for Chrome CDP; the app resolves that Docker host alias to the local bridge IP before connecting because Chrome rejects non-localhost Host headers. Do not expose Chrome CDP (`9222`) publicly.
+## Quick start Sample Workflows
 
-## Quick start (sample workflows)
-
-On first startup the app installs bundled sample workflows (see `[app/seed/sample_workflows/](app/seed/sample_workflows/)`). Sample job and candidate files live under `[.AgentPlatform/Sample Data/](.AgentPlatform/Sample%20Data/)`.
+Try out the sample workflows after you have the app and Agent Chrome setup. Two sample workflows are available.
 
 1. Open **Workflows** — you should see **Job Candidate Review** and **Submit Candidate Review (Needs MCP Key)** with a **Sample** badge.
-2. Click **Run** on the **Job Candidate Review** workflow; sample runs pre-fill `candidate_name`, `job_files`, and `candidate_files` (defaults: `Jon Stewart`, `./.AgentPlatform/Sample Data/Job Files`, `./.AgentPlatform/Sample Data/Jon Stewart`).
-3. Open the run under **Runs** and watch the **Result** tab when the run finishes. You can see and resume a run in the Full Thread tab (hit refresh / auto refresh if the thread is still active).
+2. Click **Run** on the **Job Candidate Review** workflow
+3. A modal pops up with prefilled variables - `candidate_name`, `job_files`, and `candidate_files`. Just hit enter to proceed.
+4. App starts executing the workflow.
+3. Open the run under **Runs** and watch the chat session in the **Full Thread** tab (hit refresh / auto refresh for refreshing the thread as new messages appear).
+4. If you're on Agent Browser then the workflow will open new tabs as it navigates the web. You may move to a new window or a new browser altogether if this gets annoying.
+4. The **Result** tab shows the final result after the workflow is done.
+5. You can resume or extend the run (chat thread) form the **Full Thread** by typing in a new request. For e.g. you could ask the LLM why it did what it did or ask it's help in getting around an error etc.
+6. Hit 'Analyze Run' to get some tips on what to improve with your prompt and workflow.
 
-**Job Candidate Review** uses local file and browser tools only. **Submit Candidate Review (Needs MCP Key)** also enables Zapier Agentic meta-tools to submit the review (e.g. to a spreadsheet) — configure Zapier on **Integrations** before running. You will need to provide your zapier URL and token.
+**Job Candidate Review** workflow uses local file and browser tools only, hence it's the first one to try out.
 
-Paths resolve against the configured workspace root (`INTELLIGENCE_ENGINE_WORKSPACE_ROOT`). `INTELLIGENCE_ENGINE_HOME_DIR` remains supported as a legacy alias.
+**Submit Candidate Review (Needs MCP Key)** requires Zapier Agentic meta-tools, therefore it makes sense to run it only after configuring Zapier on the **Integrations** page.
 
-If you delete a sample workflow, use **Install sample workflows** on the Workflows page to restore only what is missing (your edits to existing samples are kept).
+### New Workflows
+- You can define new workflows as well from the Workflows page.
+- Local file paths resolve against ~/AgentPlatform/workspaace (docker setup) and agains the repository root (developer setup)
 
-## Zapier MCP (optional)
+### Setting up Zapier MCP Connection
 
-Connect Zapier’s **Agentic** MCP server apps via meta-tools (`discover_zapier_actions`, `execute_zapier_write_action`, etc.). Enable at least Google Sheets read and write and Google Drive read actions. These are needed for the "Submit Candidate Review (Needs MCP Key)" workflow.
+Connect Zapier’s Agentic MCP server apps via meta-tools (`discover_zapier_actions`, `execute_zapier_write_action`, etc.). Enable at least Google Sheets read and write and Google Drive read actions. These are needed for the **Submit Candidate Review (Needs MCP Key)** workflow.
 
 1. Create a server and API token at [mcp.zapier.com](https://mcp.zapier.com).
 2. Open **Integrations** → **MCP Tools — Zapier**, paste the server URL and token, **Test connection**, then **Save**.
 3. Edit a workflow and enable **Zapier MCP (Agentic)** tools (off by default).
 4. In the workflow prompt, tell the agent when to use Zapier.
 
-**Security:** BYOK only — never commit your token. Each MCP tool call consumes Zapier task quota (~2 tasks per call). Tool inputs/outputs are stored in run transcripts.
+
+# Developer Zone
 
 ## Tech stack
 
@@ -104,19 +122,6 @@ Connect Zapier’s **Agentic** MCP server apps via meta-tools (`discover_zapier_
 | LLMs        | openai, anthropic, google-generativeai, boto3 (Bedrock)                                              |
 | Agent tools | Playwright (CDP-first), httpx, beautifulsoup4, ddgs, pypdf, python-docx, chevron, MCP client (`mcp`) |
 
-
-## Local browser (agent Chrome)
-
-Agents browse authenticated sites via a dedicated Chrome instance, separate from your everyday browser:
-
-```bash
-make chrome-debug          # launch agent Chrome on 127.0.0.1:9222
-make chrome-debug-check    # verify CDP is listening
-```
-
-Sign in to sites once inside the agent Chrome window; sessions persist in `./data/chrome-debug` for local development.
-
-Configure the CDP URL in **Settings** (local default: `http://127.0.0.1:9222`; Docker default: `http://host.docker.internal:9222`).
 
 ## Dependency management
 
