@@ -8,7 +8,7 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
 ## Prerequisites
 
 - Runs on Mac only
-- Google Chrome (for local-browser agent tools via CDP)
+- Google Chrome
 - LLM API Key (OpenAI preferred)
 - Optional but preferable: Zapier MCP Server URL and token
 - Non Developers - Install via Docker
@@ -20,15 +20,12 @@ Technical architecture: [docs/Technical Design Document.md](docs/Technical%20Des
 ## Installation
 THe product has two parts:
 - Agent Platform: A python app that either runs either directly on your laptop (developer setup) or as a docker container (docker setup).
-- Agent Chrome: A second instance of your Chrome browser (which you have already installed).
+- Agent Chrome: An instance of your Chrome browser (which you have already installed).
     - Looks and feels the same as the main instance - even the Dock bar icons are the identical. This is a PoC :)
 
-### Option 1: Run inside Docker (recommended)
+### Option 1: Installing As a User (recommended)
 
 - You need to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
-- You need to have Google Chrome
-- The Agent Platform Python app runs as a docker container
-- A separate copy of chrome (Agent Chrome) runs on your Mac and the Agent Platform app talks to it. 
 
 Optional: To cleanup a previous install, stop the docker container and Agent Chrome and then delete the `~/AgentPlatform` folder.
 
@@ -58,17 +55,17 @@ To stop them in the future:
 - Once Agent Chrome is up, you can sign into a Chrome profile to make things easier, but you don't have to. 
 - However, this is your integration point into authenticated apps / websites. Therefore you should log into any apps / websites that you want the LLM to have access to - e.g. JIRA, Confluence, LinkedIn, Workday, Google Docs etc.
 - This is the full Chrome web-browser that you installed and therefore is not limited in capability.
-- This is how you integrate into your Company with zero effort from IT, but still relying on the company’s existing security controls.
+- This is how we integrate into the Company's systems with zero IT effort and yet in full compliance with the company’s existing security controls.
 
 ### Setup the app
-- Open [http://localhost:8001](http://localhost:8001) in any browser (including the Agent Browser)
+- Open [http://localhost:8001](http://localhost:8001) in any browser (including Agent Chrome)
 - Go to **Settings** and setup at least one LLM API Key (OpenAI works reliably).
 - Under settings also, setup default LLM - prefer to use the most powerful one you have available (I use gpt-5.5). The choice will impact the quality of runs.
 - If you have a Zapier MCP Server URL and token, then set those up too. Without this you won't be able to use Zapier of course.
 
 ## Quick start Sample Workflows
 
-Try out the sample workflows after you have the app and Agent Chrome setup. Two sample workflows are available.
+Two sample workflows are available to get you started.
 
 1. Open **Workflows** — you should see **Job Candidate Review** and **Submit Candidate Review (Needs MCP Key)** with a **Sample** badge.
 2. Click **Run** on the **Job Candidate Review** workflow
@@ -84,10 +81,6 @@ Try out the sample workflows after you have the app and Agent Chrome setup. Two 
 
 **Submit Candidate Review (Needs MCP Key)** requires Zapier Agentic meta-tools, therefore it makes sense to run it only after configuring Zapier on the **Integrations** page.
 
-### New Workflows
-- You can define new workflows as well from the Workflows page.
-- Local file paths resolve against ~/AgentPlatform/workspace (docker setup) and against the repository root (developer setup)
-
 ### Setting up Zapier MCP Connection
 
 Connect Zapier’s Agentic MCP server apps via meta-tools (`discover_zapier_actions`, `execute_zapier_write_action`, etc.). Enable at least Google Sheets read and write and Google Drive read actions. These are needed for the **Submit Candidate Review (Needs MCP Key)** workflow.
@@ -96,8 +89,12 @@ Connect Zapier’s Agentic MCP server apps via meta-tools (`discover_zapier_acti
 2. Open **Integrations** → **MCP Tools — Zapier**, paste the server URL and token, **Test connection**, then **Save**.
 3. Edit a workflow and enable **Zapier MCP (Agentic)** tools (off by default).
 
+### Creating New Workflows
+- You can define new workflows as well from the Workflows page.
+- Local file paths resolve against ~/AgentPlatform/workspace (docker setup) and against the repository root (developer setup)
 
-### Install Option 2: Developer Setup
+
+### Installation Option 2: Developer Setup
 
 ```bash
 git clone git@github.com:untrix/intelligence_engine.git
