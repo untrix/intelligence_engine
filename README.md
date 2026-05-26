@@ -35,7 +35,7 @@ Optional: To cleanup a previous install, stop the docker container, Agent Chrome
 Run the Mac setup script from this repository URL:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/dev/scripts/install-agent-platform-mac.sh | bash
+curl -fsSL https://raw.githubusercontent.com/untrix/intelligence_engine/main/scripts/install-agent-platform-mac.sh | bash
 ```
 
 Run the following scripts to start Agent Chrome in the background and then start the app container:

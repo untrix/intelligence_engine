@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_ROOT="${AGENT_PLATFORM_ROOT:-"$HOME/AgentPlatform"}"
-IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/untrix/intelligence_engine:dev}"
+IMAGE="${AGENT_PLATFORM_IMAGE:-ghcr.io/untrix/intelligence_engine:main}"
 APP_ROOT="$INSTALL_ROOT/.AgentPlatform"
 COMPOSE_FILE="$APP_ROOT/docker-compose.yml"
 CHROME_LAUNCHER="$INSTALL_ROOT/start-agent-chrome.sh"
